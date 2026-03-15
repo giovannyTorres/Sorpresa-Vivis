@@ -1,0 +1,89 @@
+:root {
+  --bg1: #20043f;
+  --bg2: #550f95;
+  --bg3: #ff4bb1;
+  --mint: #65ffe4;
+  --cream: #fff6be;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: 'VT323', monospace;
+  color: #fdf2ff;
+  background: radial-gradient(circle at 20% 10%, rgba(101,255,228,.3), transparent 40%),
+              radial-gradient(circle at 80% 0%, rgba(255,117,198,.3), transparent 40%),
+              linear-gradient(160deg, var(--bg1), var(--bg2), var(--bg3));
+}
+
+.wrapper {
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.hud {
+  border: 3px solid #ffd9f6;
+  background: rgba(9, 7, 33, 0.82);
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 0 28px rgba(255, 202, 237, 0.55);
+}
+
+h1 {
+  margin: 0 0 10px;
+  font-family: 'Press Start 2P', cursive;
+  line-height: 1.6;
+  font-size: clamp(.8rem, 2vw, 1.2rem);
+}
+
+.hud p { margin: 0 0 10px; font-size: 1.5rem; color: var(--cream); }
+.stats { display: flex; gap: 16px; flex-wrap: wrap; font-size: 1.45rem; color: var(--mint); }
+
+.stage-frame {
+  margin-top: 14px;
+  border: 3px solid #d5fffd;
+  border-radius: 14px;
+  padding: 10px;
+  background: rgba(8, 5, 24, 0.85);
+}
+
+#game {
+  width: 100%;
+  height: auto;
+  border: 3px solid #ffe8fa;
+  background: #1c0e36;
+  image-rendering: pixelated;
+}
+
+.controls-help {
+  margin-top: 10px;
+  display: grid;
+  gap: 2px;
+  color: #e8fdff;
+  font-size: 1.2rem;
+}
+
+.log, .ending {
+  margin-top: 12px;
+  border-radius: 12px;
+  border: 2px solid #ffe29d;
+  background: rgba(13, 8, 38, 0.86);
+  padding: 10px;
+  min-height: 88px;
+  font-size: 1.35rem;
+}
+
+.hidden { display: none; }
+.restart {
+  margin-top: 10px;
+  background: #2b97d8;
+  color: white;
+  border: 2px solid white;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-family: 'Press Start 2P', cursive;
+  font-size: .65rem;
+  cursor: pointer;
+}

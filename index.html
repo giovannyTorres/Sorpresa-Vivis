@@ -1,225 +1,43 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Para Vivis</title>
-    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
-    <style>
-        /* Reset básico */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            /* Fondo rosa pálido con patrón de puntos */
-            background-color: #f9e8e8;
-            background-image: radial-gradient(#dcbdbd 1px, transparent 1px);
-            background-size: 20px 20px;
-            font-family: 'Playfair Display', serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            overflow: hidden; 
-            color: #5e4044;
-        }
-
-        .container {
-            position: relative;
-            z-index: 10;
-            width: 90%;
-            max-width: 400px;
-            padding: 20px;
-        }
-
-        /* Tarjeta principal */
-        .card {
-            background-color: #fffbf7; 
-            border: 2px solid #e0c5c5;
-            border-radius: 10px;
-            padding: 40px 30px;
-            text-align: center;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-            position: relative;
-        }
-
-        /* Monograma "V" */
-        .monogram {
-            width: 60px;
-            height: 60px;
-            background-color: #a86b73;
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Great Vibes', cursive;
-            font-size: 30px;
-            position: absolute;
-            top: -30px;
-            left: 50%;
-            transform: translateX(-50%);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            border: 3px solid #fffbf7;
-            z-index: 20;
-        }
-
-        /* Títulos y Textos */
-        h1 {
-            font-family: 'Great Vibes', cursive;
-            color: #a86b73;
-            font-size: 3rem;
-            margin-top: 15px;
-            margin-bottom: 20px;
-            font-weight: normal;
-        }
-
-        .quote {
-            font-style: italic;
-            color: #d19a9a; 
-            font-size: 0.95rem;
-            line-height: 1.5;
-            margin-bottom: 25px;
-            border-left: 2px solid #f0d0d0;
-            padding-left: 10px;
-            display: inline-block;
-        }
-
-        .main-text {
-            font-size: 1.1rem;
-            line-height: 1.6;
-            margin-bottom: 25px;
-            color: #4a3b3e;
-        }
-
-        .question-intro {
-            font-size: 1rem;
-            margin-bottom: 10px;
-            color: #4a3b3e;
-        }
-
-        .big-question {
-            color: #a86b73;
-            font-weight: 700;
-            font-size: 1.3rem;
-            margin-bottom: 25px;
-            display: block;
-        }
-
-        /* Botón */
-        .btn-accept {
-            background-color: #b56b76;
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            font-size: 1.1rem;
-            border-radius: 25px;
-            cursor: pointer;
-            font-family: 'Playfair Display', serif;
-            font-weight: bold;
-            box-shadow: 0 4px 15px rgba(181, 107, 118, 0.4);
-            transition: transform 0.2s, background-color 0.2s;
-            position: relative;
-            z-index: 30; /* Asegura que el botón sea clickeable siempre */
-        }
-
-        .btn-accept:hover {
-            background-color: #a05a65;
-            transform: scale(1.05);
-        }
-
-        .btn-accept:active {
-            transform: scale(0.95);
-        }
-
-        /* Animación de corazones - CORREGIDO: Z-INDEX ALTO */
-        .heart {
-            position: fixed;
-            top: -10vh;
-            font-size: 20px;
-            /* z-index 9999 asegura que caigan ENCIMA de todo el contenido */
-            z-index: 9999; 
-            pointer-events: none; /* Permite hacer click a través de los corazones */
-            animation: fall linear forwards;
-        }
-
-        @keyframes fall {
-            0% {
-                transform: translateY(0) rotate(0deg);
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(110vh) rotate(360deg);
-                opacity: 0;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Romance Quest 8-Bits · Rescate de Giovanny</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <main class="wrapper">
+    <header class="hud">
+      <h1>ROMANCE QUEST 8-BITS</h1>
+      <p>Vivi + Wisky vs Maliketh · salva a Giovanny del Reino de los Pelos de Gato</p>
+      <div class="stats">
+        <div>Vivi HP: <span id="viviHp">100</span></div>
+        <div>Wisky HP: <span id="wiskyHp">100</span></div>
+        <div>Maliketh HP: <span id="malikethHp">220</span></div>
+      </div>
+    </header>
 
-    <div class="container">
-        <div class="card">
-            <div class="monogram">V</div>
-            
-            <h1>Mi querida Vivis</h1>
-            
-            <div class="quote">
-                "En vano he luchado. No quiero hacerlo más. Mis sentimientos no pueden contenerse. Debes permitirme decirte cuán ardientemente te admiro y te amo."
-            </div>
-            
-            <p class="main-text">
-                Cada día contigo es una página de mi novela favorita. Eres mi orgullo y mi prejuicio, mi razón y mi corazón.
-            </p>
-            
-            <p class="question-intro">
-                Tengo una pregunta que me quema el alma...
-            </p>
-            
-            <span class="big-question">¿Quieres ser mi San Valentín?</span>
-            
-            <button class="btn-accept" onclick="rainHearts()">Sí, acepto ♥</button>
-        </div>
-    </div>
+    <section class="stage-frame">
+      <canvas id="game" width="960" height="540" aria-label="Mini videojuego romántico 2D"></canvas>
+      <div class="controls-help">
+        <strong>Controles:</strong>
+        <span>WASD = mover a Vivi</span>
+        <span>Flechas = mover a Wisky</span>
+        <span>ESPACIO = ataque de Vivi (Ráfaga de Puños Tiernos)</span>
+        <span>ENTER = ataque de Wisky (Arañazo)</span>
+      </div>
+    </section>
 
-    <script>
-        function rainHearts() {
-            const heartCount = 60; // Cantidad de corazones
-            const colors = ['#b56b76', '#e5b0b7', '#d69a9a', '#ffccd5', '#a86b73']; 
+    <section id="log" class="log"></section>
+    <section id="ending" class="ending hidden"></section>
+    <button id="restart" class="restart">Reiniciar aventura</button>
+  </main>
 
-            for (let i = 0; i < heartCount; i++) {
-                setTimeout(() => {
-                    const heart = document.createElement('div');
-                    heart.classList.add('heart');
-                    heart.innerHTML = '♥';
-                    
-                    // Posición horizontal aleatoria
-                    heart.style.left = Math.random() * 100 + 'vw';
-                    
-                    // Tamaño aleatorio
-                    const size = Math.random() * 20 + 15; 
-                    heart.style.fontSize = size + 'px';
-                    
-                    // Color aleatorio
-                    const randomColor = colors[Math.floor(Math.random() * colors.length)];
-                    heart.style.color = randomColor;
-
-                    // Duración de la caída
-                    const duration = Math.random() * 3 + 3; // Entre 3 y 6 segundos
-                    heart.style.animationDuration = duration + 's';
-
-                    document.body.appendChild(heart);
-
-                    // Limpieza
-                    setTimeout(() => {
-                        heart.remove();
-                    }, duration * 1000);
-
-                }, i * 100); 
-            }
-        }
-    </script>
+  <script type="module" src="sprites.js"></script>
+  <script type="module" src="game.js"></script>
 </body>
 </html>
