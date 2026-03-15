@@ -13,7 +13,7 @@ func _ready() -> void:
 	prompt_label.visible = false
 
 func _process(_delta: float) -> void:
-	if _player_inside and Input.is_action_just_pressed("action_companion"):
+	if _player_inside and not GameState.narrative_locked and Input.is_action_just_pressed("action_companion"):
 		EventBus.request_combat(enemy_id, encounter_context)
 
 func _on_body_entered(body: Node) -> void:

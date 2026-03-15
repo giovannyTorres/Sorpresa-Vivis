@@ -2,17 +2,16 @@ extends Node
 class_name GameBootstrap
 
 const DEFAULT_OVERWORLD_SCENE := "res://overworld/scenes/map_pradera_bigotes.tscn"
+const INTRO_SCENE := "res://narrative/cutscenes/intro_capture.tscn"
 const DEFAULT_COMBAT_SCENE := "res://combat/scenes/combat_scene.tscn"
 
 @onready var root_layer: Node = $"../Root"
 
 func _ready() -> void:
-	# Arranque mínimo estable: se abre directamente el overworld.
-	# Cuando la intro narrativa tenga mayor implementación se puede rutear antes de esto.
 	GameState.reset_for_new_game()
 	SceneRouter.configure_root(root_layer)
 	_bind_global_events()
-	SceneRouter.go_to_overworld(DEFAULT_OVERWORLD_SCENE)
+	SceneRouter.go_to_overworld(INTRO_SCENE)
 
 func _bind_global_events() -> void:
 	if not EventBus.combat_requested.is_connected(_on_combat_requested):
