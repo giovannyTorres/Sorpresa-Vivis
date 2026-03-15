@@ -1,9 +1,10 @@
 :root {
-  --violet-1: #1b0633;
-  --violet-2: #52209c;
-  --pink: #ff65c0;
-  --cyan: #77fff1;
-  --cream: #fff4bf;
+  --bg1: #2a1f7d;
+  --bg2: #6a3db3;
+  --bg3: #f06ecf;
+  --ink: #fff7ff;
+  --cyan: #89fff5;
+  --gold: #ffe9a8;
 }
 
 * { box-sizing: border-box; }
@@ -12,125 +13,99 @@ body {
   margin: 0;
   min-height: 100vh;
   font-family: 'VT323', monospace;
-  color: #fff4ff;
+  color: var(--ink);
   background:
-    radial-gradient(circle at 18% 10%, rgba(119, 255, 241, 0.28), transparent 34%),
-    radial-gradient(circle at 87% -8%, rgba(255, 120, 195, 0.4), transparent 35%),
-    linear-gradient(155deg, var(--violet-1), var(--violet-2), var(--pink));
-}
-
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background: repeating-linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0.045),
-    rgba(255, 255, 255, 0.045) 2px,
-    transparent 2px,
-    transparent 5px
-  );
-  mix-blend-mode: soft-light;
+    radial-gradient(circle at 12% 8%, rgba(137,255,245,0.25), transparent 32%),
+    radial-gradient(circle at 85% -6%, rgba(255,167,219,0.35), transparent 36%),
+    linear-gradient(155deg, var(--bg1), var(--bg2), var(--bg3));
 }
 
 .wrapper {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 18px;
+  padding: 16px;
 }
 
 .hud {
-  border: 3px solid #ffd2f3;
-  background: linear-gradient(180deg, rgba(9, 6, 31, 0.94), rgba(17, 12, 44, 0.85));
+  border: 3px solid #ffd4f2;
   border-radius: 14px;
-  padding: 16px;
-  box-shadow: 0 0 28px rgba(255, 194, 234, 0.55), inset 0 0 22px rgba(89, 59, 153, 0.38);
+  padding: 14px;
+  background: linear-gradient(180deg, rgba(12, 9, 44, .95), rgba(19, 14, 52, .88));
+  box-shadow: 0 0 24px rgba(255, 194, 239, .45);
 }
 
 h1 {
   margin: 0 0 8px;
   font-family: 'Press Start 2P', cursive;
-  font-size: clamp(0.74rem, 2vw, 1.2rem);
-  line-height: 1.7;
-  color: #fff3bd;
-  text-shadow: 0 0 12px rgba(255, 214, 241, 0.7);
+  font-size: clamp(.74rem, 2vw, 1.16rem);
+  line-height: 1.6;
+  color: var(--gold);
 }
 
 .hud p {
-  margin: 0 0 11px;
-  font-size: clamp(1.28rem, 2.8vw, 1.65rem);
-  color: #fbe8ff;
+  margin: 0 0 10px;
+  font-size: clamp(1.2rem, 2.8vw, 1.55rem);
 }
 
 .stats {
   display: flex;
-  flex-wrap: wrap;
   gap: 16px;
-  font-size: clamp(1.22rem, 2.8vw, 1.55rem);
+  flex-wrap: wrap;
+  font-size: clamp(1.15rem, 2.8vw, 1.45rem);
   color: var(--cyan);
 }
 
 .stage-frame {
   margin-top: 14px;
-  border: 3px solid #caf8ff;
-  border-radius: 16px;
+  border: 3px solid #c5f8ff;
+  border-radius: 14px;
   padding: 10px;
-  background: linear-gradient(180deg, rgba(8, 5, 26, 0.94), rgba(12, 9, 38, 0.9));
-  box-shadow: 0 10px 34px rgba(12, 8, 22, 0.45);
+  background: linear-gradient(180deg, rgba(9,6,28,.96), rgba(13,10,37,.92));
 }
 
 #game {
   width: 100%;
   height: auto;
-  border: 3px solid #ffe7f9;
-  border-radius: 8px;
-  background: #120826;
+  border: 3px solid #ffe9f9;
+  border-radius: 6px;
+  background: #110626;
   image-rendering: pixelated;
 }
 
 .controls-help {
-  margin-top: 12px;
+  margin-top: 10px;
   display: grid;
-  gap: 3px;
-  color: #e7fcff;
-  font-size: clamp(1.07rem, 2.5vw, 1.3rem);
+  gap: 2px;
+  font-size: clamp(1.05rem, 2.5vw, 1.3rem);
 }
 
-.controls-help strong { color: var(--cream); }
+.controls-help strong { color: var(--gold); }
 
 .log,
 .ending {
   margin-top: 12px;
-  border-radius: 12px;
-  border: 2px solid #ffe39f;
-  background: rgba(15, 9, 43, 0.88);
-  padding: 11px;
-  min-height: 94px;
-  font-size: clamp(1.2rem, 2.8vw, 1.45rem);
+  border: 2px solid #ffe39d;
+  border-radius: 10px;
+  background: rgba(15, 10, 45, .9);
+  padding: 10px;
+  min-height: 88px;
+  font-size: clamp(1.15rem, 2.6vw, 1.4rem);
 }
 
 .ending {
-  border-color: #ffd0ed;
-  box-shadow: 0 0 15px rgba(255, 183, 225, 0.35);
+  border-color: #ffc2e6;
 }
 
 .hidden { display: none; }
 
 .restart {
   margin-top: 10px;
-  border: 2px solid #ffffff;
+  border: 2px solid #fff;
   border-radius: 10px;
-  padding: 10px 14px;
+  padding: 10px 13px;
   font-family: 'Press Start 2P', cursive;
-  font-size: 0.64rem;
-  color: #fff;
-  background: linear-gradient(180deg, #2a88d0, #2353b0);
+  font-size: .62rem;
+  color: white;
+  background: linear-gradient(180deg, #2d8ad7, #2355b0);
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.2s ease;
-}
-
-.restart:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 0 15px rgba(126, 219, 255, 0.65);
 }
