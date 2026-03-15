@@ -18,7 +18,21 @@ func load_dialogue_file(path: String) -> void:
 	if typeof(parsed) != TYPE_DICTIONARY:
 		push_error("JSON de diálogo inválido: %s" % path)
 		return
-	_dialogue_data = parsed
+	for dialogue_id in (parsed as Dictionary).keys():
+		_dialogue_data[dialogue_id] = parsed[dialogue_id]
+
+func load_dialogue_folder(folder_path: String) -> void:
+	var dir := DirAccess.open(folder_path)
+	if dir == null:
+		push_warning("No se pudo abrir carpeta de diálogos: %s" % folder_path)
+		return
+	dir.list_dir_begin()
+	var file_name := dir.get_next()
+	while not file_name.is_empty():
+		if not dir.current_is_dir() and file_name.ends_with(".json"):
+			load_dialogue_file("%s/%s" % [folder_path, file_name])
+		file_name = dir.get_next()
+	dir.list_dir_end()
 
 func start_dialogue(dialogue_id: String) -> void:
 	if not _dialogue_data.has(dialogue_id):

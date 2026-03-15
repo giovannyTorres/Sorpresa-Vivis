@@ -1,0 +1,18 @@
+{
+  "ch1_overworld_intro": {
+    "lines": [
+      {
+        "speaker": "Vivis",
+        "text": "Esta pradera parece suave... pero cada pelo vibra como si nos estuviera observando."
+      },
+      {
+        "speaker": "Wiky Wikerman el asesino de wiskys",
+        "text": "Me encanta. Sitio bonito, peligroso y con mala fama. Vamos a encontrar el rastro de Giovanny."
+      },
+      {
+        "speaker": "Narrador",
+        "text": "Objetivo actualizado: seguir la pelusa oscura cerca del altar."
+      }
+    ]
+  }
+}
