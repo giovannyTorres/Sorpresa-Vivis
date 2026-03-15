@@ -1,0 +1,33 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://overworld/scripts/player_controller.gd" id="1_player"]
+[ext_resource type="Script" path="res://overworld/scripts/companion_follower.gd" id="2_companion"]
+[ext_resource type="Script" path="res://ui/scripts/hud_controller.gd" id="3_hud"]
+
+[node name="MapPraderaBigotes" type="Node2D"]
+
+[node name="Player" type="CharacterBody2D" parent="."]
+position = Vector2(180, 300)
+script = ExtResource("1_player")
+
+[node name="Companion" type="Node2D" parent="."]
+position = Vector2(130, 320)
+script = ExtResource("2_companion")
+target_path = NodePath("../Player")
+
+[node name="HUD" type="CanvasLayer" parent="."]
+script = ExtResource("3_hud")
+
+[node name="PanelContainer" type="PanelContainer" parent="HUD"]
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 500.0
+offset_bottom = 70.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HUD/PanelContainer"]
+
+[node name="ChapterLabel" type="Label" parent="HUD/PanelContainer/VBoxContainer"]
+text = "Capítulo"
+
+[node name="ObjectiveLabel" type="Label" parent="HUD/PanelContainer/VBoxContainer"]
+text = "Objetivo"

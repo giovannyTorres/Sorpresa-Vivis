@@ -1,0 +1,12 @@
+[gd_scene format=3]
+
+[node name="IntroCapture" type="Node2D"]
+
+[node name="MarkerVivis" type="Marker2D" parent="."]
+position = Vector2(160, 260)
+
+[node name="MarkerWiky" type="Marker2D" parent="."]
+position = Vector2(230, 280)
+
+[node name="MarkerMaliketh" type="Marker2D" parent="."]
+position = Vector2(680, 250)

@@ -1,0 +1,11 @@
+{
+  "id": "wiky_wikerman",
+  "display_name": "Wiky Wikerman el asesino de wiskys",
+  "role": "companero",
+  "species": "gato tuxedo",
+  "max_hp": 100,
+  "base_speed": 14,
+  "attacks": ["aranazo_ponzonoso"],
+  "tags": ["travieso", "apoyo", "humor_interno"],
+  "bio": "Compañero travieso de Vivis con energía impredecible y ataques venenosos."
+}

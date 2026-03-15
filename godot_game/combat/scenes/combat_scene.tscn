@@ -1,0 +1,16 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://combat/scripts/turn_manager.gd" id="1_turn"]
+[ext_resource type="Script" path="res://combat/scripts/action_resolver.gd" id="2_resolver"]
+[ext_resource type="Script" path="res://combat/scripts/enemy_ai.gd" id="3_ai"]
+
+[node name="CombatScene" type="Node2D"]
+
+[node name="TurnManager" type="Node" parent="."]
+script = ExtResource("1_turn")
+
+[node name="ActionResolver" type="Node" parent="."]
+script = ExtResource("2_resolver")
+
+[node name="EnemyAI" type="Node" parent="."]
+script = ExtResource("3_ai")
