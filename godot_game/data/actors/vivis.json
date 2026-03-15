@@ -1,0 +1,10 @@
+{
+  "id": "vivis",
+  "display_name": "Vivis",
+  "role": "protagonista",
+  "max_hp": 100,
+  "base_speed": 12,
+  "attacks": ["rafaga_punos_tiernos"],
+  "tags": ["adorable", "valiente", "emocional"],
+  "bio": "Protagonista principal que cruza el Mundo de los Pelos de Gato para rescatar a Giovanny."
+}
