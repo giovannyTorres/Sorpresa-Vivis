@@ -1,0 +1,26 @@
+[gd_scene format=3]
+
+[node name="IntroCapture" type="Node2D"]
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="Background" type="ColorRect" parent="CanvasLayer"]
+offset_right = 960.0
+offset_bottom = 540.0
+color = Color(0.08, 0.08, 0.12, 1)
+
+[node name="Title" type="Label" parent="CanvasLayer"]
+offset_left = 24.0
+offset_top = 22.0
+offset_right = 700.0
+offset_bottom = 60.0
+text = "Intro Capture placeholder"
+
+[node name="MarkerVivis" type="Marker2D" parent="."]
+position = Vector2(160, 260)
+
+[node name="MarkerWiky" type="Marker2D" parent="."]
+position = Vector2(230, 280)
+
+[node name="MarkerMaliketh" type="Marker2D" parent="."]
+position = Vector2(680, 250)

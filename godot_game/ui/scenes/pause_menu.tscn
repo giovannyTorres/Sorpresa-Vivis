@@ -1,0 +1,23 @@
+[gd_scene format=3]
+
+[node name="PauseMenu" type="CanvasLayer"]
+
+[node name="Panel" type="PanelContainer" parent="."]
+offset_left = 310.0
+offset_top = 140.0
+offset_right = 650.0
+offset_bottom = 380.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
+
+[node name="Title" type="Label" parent="Panel/VBoxContainer"]
+text = "Pausa"
+
+[node name="ResumeButton" type="Button" parent="Panel/VBoxContainer"]
+text = "Continuar"
+
+[node name="SaveButton" type="Button" parent="Panel/VBoxContainer"]
+text = "Guardar"
+
+[node name="QuitButton" type="Button" parent="Panel/VBoxContainer"]
+text = "Salir"

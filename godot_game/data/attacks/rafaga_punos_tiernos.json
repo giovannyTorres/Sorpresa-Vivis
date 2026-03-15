@@ -1,0 +1,10 @@
+{
+  "id": "rafaga_punos_tiernos",
+  "display_name": "Ráfaga de puños tiernos",
+  "owner": "vivis",
+  "type": "physical",
+  "damage_min": 14,
+  "damage_max": 23,
+  "status_effect": null,
+  "description": "Vivis combina ternura y contundencia en una ráfaga veloz."
+}
