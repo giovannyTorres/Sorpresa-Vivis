@@ -14,7 +14,11 @@ func load_dialogue_file(path: String) -> void:
 	if file == null:
 		push_error("No se pudo abrir diálogo: %s" % path)
 		return
-	_dialogue_data = JSON.parse_string(file.get_as_text())
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	if typeof(parsed) != TYPE_DICTIONARY:
+		push_error("JSON de diálogo inválido: %s" % path)
+		return
+	_dialogue_data = parsed
 
 func start_dialogue(dialogue_id: String) -> void:
 	if not _dialogue_data.has(dialogue_id):
@@ -34,5 +38,5 @@ func next_line() -> void:
 		dialogue_finished.emit(_current_dialogue_id)
 		_current_dialogue_id = ""
 		return
-	var line: Dictionary = lines[_line_index]
+	var line := lines[_line_index] as Dictionary
 	dialogue_line_changed.emit(line.get("speaker", ""), line.get("text", ""))

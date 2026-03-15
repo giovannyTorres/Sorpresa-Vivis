@@ -1,5 +1,4 @@
 extends Node
-class_name EventBus
 
 signal combat_requested(enemy_id: String, context: Dictionary)
 signal dialogue_requested(dialogue_id: String)

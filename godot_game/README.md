@@ -18,6 +18,8 @@ Base técnica inicial para el nuevo juego retro 2D.
 
 ## Estado actual
 - El proyecto ya incluye `project.godot`, autoloads y escenas base.
+
+- Arranque temporal: `GameBootstrap` enruta directo a `overworld/scenes/map_pradera_bigotes.tscn` para asegurar visibilidad mientras la intro/cutscene se implementa.
 - Falta integrar arte final, escenas jugables completas y wiring de señales entre todos los sistemas.
 - La estructura está preparada para escalar por feature sin mezclar lógica en un solo script.
 

@@ -1,5 +1,4 @@
 extends Node
-class_name GameState
 
 signal save_dirty()
 signal chapter_changed(chapter_id: String)

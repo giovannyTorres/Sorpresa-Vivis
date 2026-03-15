@@ -1,5 +1,4 @@
 extends Node
-class_name SceneRouter
 
 signal scene_changed(scene_path: String)
 

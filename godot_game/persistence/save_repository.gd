@@ -1,5 +1,4 @@
 extends Node
-class_name SaveRepository
 
 const SAVE_PATH := "user://save_slot_1.json"
 
