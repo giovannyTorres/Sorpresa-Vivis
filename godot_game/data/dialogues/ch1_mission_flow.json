@@ -1,0 +1,62 @@
+{
+  "ch1_clue": {
+    "lines": [
+      {
+        "speaker": "Narrador",
+        "text": "Entre los pastos aparece un cascabel cubierto de pelusa negra. Vibra con una frecuencia familiar."
+      },
+      {
+        "speaker": "Vivis",
+        "text": "Es una pista de Giovanny. Maliketh lo está empujando hacia el altar."
+      },
+      {
+        "speaker": "Wiky Wikerman el asesino de wiskys",
+        "text": "Entonces purgamos altar, rescatamos pista y seguimos. Plan travieso, plan perfecto."
+      }
+    ]
+  },
+  "ch1_altar_locked": {
+    "lines": [
+      {
+        "speaker": "Narrador",
+        "text": "El altar rechaza tu avance. Falta una resonancia en la pradera."
+      },
+      {
+        "speaker": "Wiky Wikerman el asesino de wiskys",
+        "text": "Nos falta la pista del cascabel. Sin eso, la pelusa nos mastica vivos."
+      }
+    ]
+  },
+  "ch1_combat_prep": {
+    "lines": [
+      {
+        "speaker": "Eco de Maliketh",
+        "text": "¿Creían que tocarían mi altar sin precio? Alimenten a mi guardián de pelusa corrupta."
+      },
+      {
+        "speaker": "Vivis",
+        "text": "Wiky, conmigo. Ráfaga de puños tiernos al frente."
+      },
+      {
+        "speaker": "Wiky Wikerman el asesino de wiskys",
+        "text": "Y Arañazo ponzoñoso por el costado. Vamos a romper esta cortina de pelos."
+      }
+    ]
+  },
+  "ch1_resolution": {
+    "lines": [
+      {
+        "speaker": "Narrador",
+        "text": "La pelusa corrupta se dispersa y deja la Resonancia de Cascabel en tus manos."
+      },
+      {
+        "speaker": "Vivis",
+        "text": "Giovanny sigue vivo. Esta resonancia marca su rastro."
+      },
+      {
+        "speaker": "Wiky Wikerman el asesino de wiskys",
+        "text": "Capítulo cerrado. Maliketh ya sabe que vamos en serio."
+      }
+    ]
+  }
+}

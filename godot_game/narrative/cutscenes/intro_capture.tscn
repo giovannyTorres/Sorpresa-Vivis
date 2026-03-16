@@ -1,6 +1,9 @@
-[gd_scene format=3]
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://narrative/cutscenes/intro_capture.gd" id="1_intro"]
 
 [node name="IntroCapture" type="Node2D"]
+script = ExtResource("1_intro")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
@@ -14,7 +17,22 @@ offset_left = 24.0
 offset_top = 22.0
 offset_right = 700.0
 offset_bottom = 60.0
-text = "Intro Capture placeholder"
+theme_override_font_sizes/font_size = 28
+text = "CH1"
+
+[node name="Subtitle" type="Label" parent="CanvasLayer"]
+offset_left = 24.0
+offset_top = 68.0
+offset_right = 860.0
+offset_bottom = 126.0
+text = "Contexto"
+
+[node name="MoodLine" type="Label" parent="CanvasLayer"]
+offset_left = 24.0
+offset_top = 132.0
+offset_right = 900.0
+offset_bottom = 166.0
+text = "La pelusa flota como nieve tibia. Algo en este mundo respira raro."
 
 [node name="MarkerVivis" type="Marker2D" parent="."]
 position = Vector2(160, 260)

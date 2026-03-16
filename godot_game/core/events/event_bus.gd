@@ -2,6 +2,7 @@ extends Node
 
 signal combat_requested(enemy_id: String, context: Dictionary)
 signal dialogue_requested(dialogue_id: String)
+signal dialogue_finished(dialogue_id: String)
 signal map_transition_requested(target_scene: String, spawn_marker: String)
 signal cutscene_requested(cutscene_id: String)
 
@@ -10,6 +11,9 @@ func request_combat(enemy_id: String, context: Dictionary = {}) -> void:
 
 func request_dialogue(dialogue_id: String) -> void:
 	dialogue_requested.emit(dialogue_id)
+
+func notify_dialogue_finished(dialogue_id: String) -> void:
+	dialogue_finished.emit(dialogue_id)
 
 func request_map_transition(target_scene: String, spawn_marker: String = "") -> void:
 	map_transition_requested.emit(target_scene, spawn_marker)
