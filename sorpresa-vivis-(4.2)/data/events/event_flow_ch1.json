@@ -1,0 +1,21 @@
+{
+  "chapter_1_intro": {
+    "steps": [
+      {
+        "type": "dialogue",
+        "id": "intro_capture"
+      },
+      {
+        "type": "flag",
+        "name": "intro_capture_seen",
+        "value": true
+      },
+      {
+        "type": "combat",
+        "enemy_id": "maliketh",
+        "scene": "res://combat/scenes/combat_scene.tscn",
+        "music": "boss_intro"
+      }
+    ]
+  }
+}

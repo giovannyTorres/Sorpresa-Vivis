@@ -1,0 +1,18 @@
+[gd_scene format=3]
+
+[node name="DialogueBox" type="CanvasLayer"]
+
+[node name="Panel" type="PanelContainer" parent="."]
+offset_left = 40.0
+offset_top = 360.0
+offset_right = 920.0
+offset_bottom = 520.0
+
+[node name="VBox" type="VBoxContainer" parent="Panel"]
+
+[node name="Speaker" type="Label" parent="Panel/VBox"]
+text = "Speaker"
+
+[node name="Text" type="RichTextLabel" parent="Panel/VBox"]
+bbcode_enabled = true
+text = "Texto del diálogo"
