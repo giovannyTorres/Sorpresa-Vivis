@@ -3,8 +3,8 @@
     "ch1": {
       "chapter_path": "res://data/chapters/ch1.json",
       "zone_name": "Pradera de Bigotes",
-      "welcome_text": "Pradera de Bigotes · cierre del primer rastro",
-      "hint_text": "Sigue la pelusa oscura hasta abrir la ruta",
+      "welcome_text": "Pradera de Bigotes · suave, rara y demasiado comoda",
+      "hint_text": "Revisa los rincones mullidos y sigue la pelusa oscura",
       "entry_flag": "ch1_overworld_intro_seen",
       "entry_dialogue": "ch1_overworld_intro",
       "completion_trigger_flag": "ch1_guardian_defeated",
@@ -18,6 +18,7 @@
         "item_resonancia_cascabel"
       ],
       "progress_flags": [
+        { "label": "Mundo", "flag": "ch1_world_context_seen" },
         { "label": "Pista", "flag": "ch1_clue_seen" },
         { "label": "Combate", "flag": "ch1_guardian_defeated" },
         { "label": "Ruta", "flag": "ch1_exit_to_ch2_open" }

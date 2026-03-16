@@ -1,0 +1,50 @@
+{
+  "ch1_welcome_sign": {
+    "lines": [
+      {
+        "speaker": "Cartel mullido",
+        "text": "Bienvenidas a la Pradera de Bigotes. Reglas locales: duerme si puedes, sospecha si todo se siente demasiado suave."
+      },
+      {
+        "speaker": "Vivis",
+        "text": "Acogedor... y claramente escrito por alguien que ya sabia que Maliketh rondaba por aqui."
+      },
+      {
+        "speaker": "Wiky Wikerman el asesino de wiskys",
+        "text": "Me cae bien este cartel. Tiene hospitalidad y paranoia, como nosotros."
+      }
+    ]
+  },
+  "ch1_nap_nest": {
+    "lines": [
+      {
+        "speaker": "Narrador",
+        "text": "El Nido de Siestas sigue tibio. Hay una hendidura reciente, como si Giovanny hubiera descansado aqui antes de ser arrastrado."
+      },
+      {
+        "speaker": "Vivis",
+        "text": "Todavia queda calor. No vamos tan tarde."
+      },
+      {
+        "speaker": "Wiky Wikerman el asesino de wiskys",
+        "text": "Y alguien rasco una ruta en direccion a la Galeria de Rascadores. Otro nombre para nuestra lista."
+      }
+    ]
+  },
+  "ch1_pond_reflection": {
+    "lines": [
+      {
+        "speaker": "Narrador",
+        "text": "El Estanque de Reflejos no devuelve tu cara: muestra un corredor de cascabeles negros y una silueta tabby point observando desde mas lejos."
+      },
+      {
+        "speaker": "Vivis",
+        "text": "Maliketh esta contaminando hasta el agua. Pero ese corredor... podria conectar con otra zona."
+      },
+      {
+        "speaker": "Wiky Wikerman el asesino de wiskys",
+        "text": "Perfecto. Mas misterio, mas turismo hostil. Giovanny dejo migas raras por todo este reino."
+      }
+    ]
+  }
+}
