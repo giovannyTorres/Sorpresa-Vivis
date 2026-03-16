@@ -1,0 +1,219 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://overworld/scripts/player_controller.gd" id="1_player"]
+[ext_resource type="Script" path="res://overworld/scripts/companion_follower.gd" id="2_companion"]
+[ext_resource type="Script" path="res://ui/scripts/hud_controller.gd" id="3_hud"]
+[ext_resource type="Script" path="res://overworld/scripts/chapter_zone_controller.gd" id="4_map"]
+[ext_resource type="Script" path="res://overworld/scripts/maliketh_echo_trigger.gd" id="5_echo"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_area"]
+size = Vector2(220, 120)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_player"]
+radius = 14.0
+
+[node name="MapSenderoUmbral" type="Node2D"]
+script = ExtResource("4_map")
+chapter_id = "ch2"
+
+[node name="World" type="Node2D" parent="."]
+
+[node name="Sky" type="Polygon2D" parent="World"]
+color = Color(0.2, 0.18, 0.28, 1)
+polygon = PackedVector2Array(0, 0, 1920, 0, 1920, 460, 0, 460)
+
+[node name="AshField" type="Polygon2D" parent="World"]
+color = Color(0.36, 0.34, 0.31, 1)
+polygon = PackedVector2Array(0, 360, 1920, 360, 1920, 1080, 0, 1080)
+
+[node name="Road" type="Polygon2D" parent="World"]
+color = Color(0.57, 0.48, 0.36, 1)
+polygon = PackedVector2Array(0, 740, 1920, 650, 1920, 860, 0, 930)
+
+[node name="FurScar" type="Polygon2D" parent="World"]
+color = Color(0.1, 0.04, 0.15, 1)
+polygon = PackedVector2Array(1090, 230, 1370, 260, 1520, 440, 1430, 650, 1170, 600, 1020, 390)
+
+[node name="ScarGlow" type="Polygon2D" parent="World"]
+color = Color(0.73, 0.28, 0.86, 0.42)
+polygon = PackedVector2Array(1130, 280, 1320, 300, 1420, 430, 1360, 575, 1190, 540, 1080, 385)
+
+[node name="ScarLabel" type="Label" parent="World"]
+offset_left = 1022.0
+offset_top = 188.0
+offset_right = 1552.0
+offset_bottom = 228.0
+text = "Grieta de pelusa: una huella reciente de Maliketh"
+
+[node name="FurRainOne" type="Label" parent="World"]
+offset_left = 200.0
+offset_top = 130.0
+offset_right = 760.0
+offset_bottom = 164.0
+text = "Pelusa negra flotando a contracorriente"
+
+[node name="FurRainTwo" type="Label" parent="World"]
+offset_left = 1380.0
+offset_top = 130.0
+offset_right = 1820.0
+offset_bottom = 164.0
+text = "Todo aqui vibra como si alguien estuviera mirando"
+
+[node name="MapBorderTop" type="Line2D" parent="World"]
+width = 6.0
+default_color = Color(0.08, 0.06, 0.1, 1)
+points = PackedVector2Array(24, 100, 1896, 100)
+
+[node name="MapBorderBottom" type="Line2D" parent="World"]
+width = 6.0
+default_color = Color(0.08, 0.06, 0.1, 1)
+points = PackedVector2Array(24, 1030, 1896, 1030)
+
+[node name="MapBorderLeft" type="Line2D" parent="World"]
+width = 6.0
+default_color = Color(0.08, 0.06, 0.1, 1)
+points = PackedVector2Array(24, 100, 24, 1030)
+
+[node name="MapBorderRight" type="Line2D" parent="World"]
+width = 6.0
+default_color = Color(0.08, 0.06, 0.1, 1)
+points = PackedVector2Array(1896, 100, 1896, 1030)
+
+[node name="MalikethWarningTrigger" type="Area2D" parent="."]
+position = Vector2(1270, 470)
+script = ExtResource("5_echo")
+dialogue_id = "ch2_maliketh_warning"
+trigger_flag = "ch2_echo_seen"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="MalikethWarningTrigger"]
+shape = SubResource("RectangleShape2D_area")
+
+[node name="WarningPulse" type="Polygon2D" parent="MalikethWarningTrigger"]
+color = Color(0.85, 0.32, 0.88, 0.24)
+polygon = PackedVector2Array(-110, -60, 110, -60, 110, 60, -110, 60)
+
+[node name="Player" type="CharacterBody2D" parent="."]
+position = Vector2(180, 820)
+script = ExtResource("1_player")
+world_bounds = Rect2(64, 120, 1792, 896)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Player"]
+shape = SubResource("CircleShape2D_player")
+
+[node name="VivisBody" type="Polygon2D" parent="Player"]
+color = Color(0.98, 0.45, 0.78, 1)
+polygon = PackedVector2Array(-14, -18, 14, -18, 14, 18, -14, 18)
+
+[node name="VivisFace" type="Polygon2D" parent="Player"]
+color = Color(0.98, 0.85, 0.72, 1)
+polygon = PackedVector2Array(-8, -12, 8, -12, 8, 3, -8, 3)
+
+[node name="VivisName" type="Label" parent="Player"]
+offset_left = -28.0
+offset_top = -40.0
+offset_right = 30.0
+offset_bottom = -16.0
+text = "Vivis"
+
+[node name="Camera2D" type="Camera2D" parent="Player"]
+enabled = true
+limit_left = 0
+limit_top = 0
+limit_right = 1920
+limit_bottom = 1080
+position_smoothing_enabled = true
+position_smoothing_speed = 5.0
+
+[node name="Companion" type="Node2D" parent="."]
+position = Vector2(120, 860)
+script = ExtResource("2_companion")
+target_path = NodePath("../Player")
+
+[node name="CompanionBody" type="Polygon2D" parent="Companion"]
+color = Color(0.72, 0.95, 1, 1)
+polygon = PackedVector2Array(-12, -12, 12, -12, 12, 12, -12, 12)
+
+[node name="CompanionName" type="Label" parent="Companion"]
+offset_left = -36.0
+offset_top = -34.0
+offset_right = 46.0
+offset_bottom = -12.0
+text = "Wiky"
+
+[node name="HUD" type="CanvasLayer" parent="."]
+script = ExtResource("3_hud")
+
+[node name="PanelContainer" type="PanelContainer" parent="HUD"]
+offset_left = 12.0
+offset_top = 12.0
+offset_right = 720.0
+offset_bottom = 142.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HUD/PanelContainer"]
+
+[node name="ChapterLabel" type="Label" parent="HUD/PanelContainer/VBoxContainer"]
+text = "Capitulo"
+
+[node name="ObjectiveLabel" type="Label" parent="HUD/PanelContainer/VBoxContainer"]
+text = "Objetivo"
+
+[node name="ZoneLabel" type="Label" parent="HUD/PanelContainer/VBoxContainer"]
+text = "Zona"
+
+[node name="ContextLabel" type="Label" parent="HUD/PanelContainer/VBoxContainer"]
+text = "Contexto"
+
+[node name="AnnouncementPanel" type="PanelContainer" parent="HUD"]
+visible = false
+offset_left = 250.0
+offset_top = 18.0
+offset_right = 748.0
+offset_bottom = 92.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HUD/AnnouncementPanel"]
+
+[node name="Title" type="Label" parent="HUD/AnnouncementPanel/VBoxContainer"]
+horizontal_alignment = 1
+text = "Aviso"
+
+[node name="Subtitle" type="Label" parent="HUD/AnnouncementPanel/VBoxContainer"]
+horizontal_alignment = 1
+autowrap_mode = 3
+text = "Subtitulo"
+
+[node name="AnnouncementTimer" type="Timer" parent="HUD"]
+wait_time = 2.6
+one_shot = true
+
+[node name="ControlsHint" type="Label" parent="HUD"]
+offset_left = 14.0
+offset_top = 500.0
+offset_right = 640.0
+offset_bottom = 528.0
+text = "WASD mover · teaser jugable de CH2 · SPACE dialogo"
+
+[node name="ZoneHint" type="Label" parent="HUD"]
+offset_left = 560.0
+offset_top = 16.0
+offset_right = 948.0
+offset_bottom = 48.0
+horizontal_alignment = 2
+text = "El viaje continua por un terreno mas roto"
+
+[node name="WelcomeTone" type="Label" parent="HUD"]
+offset_left = 120.0
+offset_top = 470.0
+offset_right = 860.0
+offset_bottom = 500.0
+horizontal_alignment = 1
+text = "Sendero del Umbral"
+
+[node name="ProgressLabel" type="Label" parent="HUD"]
+offset_left = 470.0
+offset_top = 500.0
+offset_right = 952.0
+offset_bottom = 528.0
+horizontal_alignment = 2
+text = "CH2"
+
+[connection signal="timeout" from="HUD/AnnouncementTimer" to="HUD" method="_on_announcement_timer_timeout"]
