@@ -1,0 +1,10 @@
+{
+  "id": "pelotazo_pelusa",
+  "display_name": "Pelotazo de pelusa",
+  "owner": "pelusa_corrupta",
+  "type": "physical",
+  "damage_min": 8,
+  "damage_max": 16,
+  "status_effect": null,
+  "description": "La pelusa corrupta se compacta y golpea con violencia pegajosa."
+}

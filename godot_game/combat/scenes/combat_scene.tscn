@@ -1,33 +1,106 @@
 [gd_scene load_steps=5 format=3]
 
-[ext_resource type="Script" path="res://combat/scripts/turn_manager.gd" id="1_turn"]
-[ext_resource type="Script" path="res://combat/scripts/action_resolver.gd" id="2_resolver"]
-[ext_resource type="Script" path="res://combat/scripts/enemy_ai.gd" id="3_ai"]
-[ext_resource type="Script" path="res://combat/scripts/combat_flow.gd" id="4_flow"]
+[ext_resource type="Script" path="res://combat/scripts/combat_flow.gd" id="1_flow"]
+[ext_resource type="Script" path="res://combat/scripts/turn_manager.gd" id="2_turn"]
+[ext_resource type="Script" path="res://combat/scripts/action_resolver.gd" id="3_resolver"]
+[ext_resource type="Script" path="res://combat/scripts/enemy_ai.gd" id="4_ai"]
 
 [node name="CombatScene" type="Node2D"]
-script = ExtResource("4_flow")
+script = ExtResource("1_flow")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
 [node name="Background" type="ColorRect" parent="CanvasLayer"]
 offset_right = 960.0
 offset_bottom = 540.0
-color = Color(0.22, 0.08, 0.14, 1)
+color = Color(0.14, 0.08, 0.16, 1)
 
-[node name="Title" type="Label" parent="CanvasLayer"]
+[node name="HeaderPanel" type="PanelContainer" parent="CanvasLayer"]
 offset_left = 20.0
-offset_top = 20.0
-offset_right = 540.0
-offset_bottom = 48.0
-text = "Combat Scene placeholder · Maliketh encounter"
+offset_top = 18.0
+offset_right = 940.0
+offset_bottom = 94.0
 
-[node name="Hint" type="Label" parent="CanvasLayer"]
+[node name="VBox" type="VBoxContainer" parent="CanvasLayer/HeaderPanel"]
+
+[node name="Title" type="Label" parent="CanvasLayer/HeaderPanel/VBox"]
+text = "Combate CH1"
+
+[node name="TurnStatus" type="Label" parent="CanvasLayer/HeaderPanel/VBox"]
+text = "Turno"
+
+[node name="PartyPanel" type="PanelContainer" parent="CanvasLayer"]
 offset_left = 20.0
-offset_top = 54.0
-offset_right = 740.0
-offset_bottom = 82.0
-text = "Pendiente: UI de turnos y acciones. Usa transiciones por EventBus."
+offset_top = 116.0
+offset_right = 330.0
+offset_bottom = 266.0
+
+[node name="VBox" type="VBoxContainer" parent="CanvasLayer/PartyPanel"]
+
+[node name="PartyTitle" type="Label" parent="CanvasLayer/PartyPanel/VBox"]
+text = "Equipo"
+
+[node name="VivisCard" type="PanelContainer" parent="CanvasLayer/PartyPanel/VBox"]
+
+[node name="VivisHP" type="Label" parent="CanvasLayer/PartyPanel/VBox/VivisCard"]
+text = "Vivis HP"
+
+[node name="WikyCard" type="PanelContainer" parent="CanvasLayer/PartyPanel/VBox"]
+
+[node name="WikyHP" type="Label" parent="CanvasLayer/PartyPanel/VBox/WikyCard"]
+text = "Wiky HP"
+
+[node name="EnemyPanel" type="PanelContainer" parent="CanvasLayer"]
+offset_left = 630.0
+offset_top = 116.0
+offset_right = 940.0
+offset_bottom = 266.0
+
+[node name="VBox" type="VBoxContainer" parent="CanvasLayer/EnemyPanel"]
+
+[node name="EnemyTitle" type="Label" parent="CanvasLayer/EnemyPanel/VBox"]
+text = "Enemigo"
+
+[node name="EnemyCard" type="PanelContainer" parent="CanvasLayer/EnemyPanel/VBox"]
+
+[node name="EnemyHP" type="Label" parent="CanvasLayer/EnemyPanel/VBox/EnemyCard"]
+text = "Enemy HP"
+
+[node name="ActionPanel" type="PanelContainer" parent="CanvasLayer"]
+offset_left = 20.0
+offset_top = 286.0
+offset_right = 470.0
+offset_bottom = 520.0
+
+[node name="VBox" type="VBoxContainer" parent="CanvasLayer/ActionPanel"]
+
+[node name="ActionsTitle" type="Label" parent="CanvasLayer/ActionPanel/VBox"]
+text = "Acciones"
+
+[node name="VivisAttackButton" type="Button" parent="CanvasLayer/ActionPanel/VBox"]
+text = "Vivis · Ráfaga de puños tiernos"
+
+[node name="WikyAttackButton" type="Button" parent="CanvasLayer/ActionPanel/VBox"]
+text = "Wiky · Arañazo ponzoñoso"
+
+[node name="Hint" type="Label" parent="CanvasLayer/ActionPanel/VBox"]
+text = "Solo se habilita el botón del personaje en turno."
+
+[node name="LogPanel" type="PanelContainer" parent="CanvasLayer"]
+offset_left = 490.0
+offset_top = 286.0
+offset_right = 940.0
+offset_bottom = 520.0
+
+[node name="VBox" type="VBoxContainer" parent="CanvasLayer/LogPanel"]
+
+[node name="LogTitle" type="Label" parent="CanvasLayer/LogPanel/VBox"]
+text = "Bitácora de combate"
+
+[node name="LogText" type="RichTextLabel" parent="CanvasLayer/LogPanel/VBox"]
+size_flags_vertical = 3
+bbcode_enabled = true
+text = ""
 
 [node name="Summary" type="Label" parent="CanvasLayer"]
 offset_left = 20.0
@@ -37,10 +110,10 @@ offset_bottom = 118.0
 text = "Resumen"
 
 [node name="TurnManager" type="Node" parent="."]
-script = ExtResource("1_turn")
+script = ExtResource("2_turn")
 
 [node name="ActionResolver" type="Node" parent="."]
-script = ExtResource("2_resolver")
+script = ExtResource("3_resolver")
 
 [node name="EnemyAI" type="Node" parent="."]
-script = ExtResource("3_ai")
+script = ExtResource("4_ai")

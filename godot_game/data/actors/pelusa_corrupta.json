@@ -2,6 +2,6 @@
   "id": "pelusa_corrupta",
   "name": "Pelusa Corrupta",
   "description": "Manifestación hostil del Mundo de los Pelos de Gato alterada por Maliketh.",
-  "hp": 45,
-  "attack_ids": ["aranazo_ponzonoso"]
+  "max_hp": 65,
+  "attack_ids": ["pelotazo_pelusa"]
 }
