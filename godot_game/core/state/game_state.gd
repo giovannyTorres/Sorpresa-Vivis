@@ -21,7 +21,17 @@ func reset_for_new_game() -> void:
 		"vivis": {"hp": 100, "max_hp": 100, "attack_ids": ["rafaga_punos_tiernos"]},
 		"wiky_wikerman": {"hp": 100, "max_hp": 100, "attack_ids": ["aranazo_ponzonoso"]}
 	}
-	world_flags = {"intro_capture_seen": false, "giovanny_rescued": false}
+	world_flags = {
+		"intro_capture_seen": false,
+		"giovanny_rescued": false,
+		"ch1_overworld_intro_seen": false,
+		"ch1_clue_seen": false,
+		"ch1_combat_started": false,
+		"ch1_guardian_defeated": false,
+		"ch1_resolution_seen": false,
+		"ch1_completed": false,
+		"item_resonancia_cascabel": false
+	}
 	combat_context = {}
 	narrative_locked = false
 	load_chapter_data("res://data/chapters/ch1.json")

@@ -1,0 +1,8 @@
+{
+  "ch1": {
+    "start": "Explora la Pradera de Bigotes y localiza una pista de Giovanny.",
+    "after_clue": "Llega al Altar de Maliketh para purgar la pelusa corrupta.",
+    "after_combat": "Regresa al claro inicial y confirma la resonancia del cascabel.",
+    "completed": "CH1 completado: obtuviste la Resonancia de Cascabel."
+  }
+}
