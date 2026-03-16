@@ -33,13 +33,57 @@ polygon = PackedVector2Array(0, 350, 1920, 350, 1920, 1080, 0, 1080)
 color = Color(0.74, 0.62, 0.39, 1)
 polygon = PackedVector2Array(0, 760, 1920, 760, 1920, 940, 0, 940)
 
+[node name="NestPath" type="Polygon2D" parent="World"]
+color = Color(0.79, 0.69, 0.46, 1)
+polygon = PackedVector2Array(150, 630, 470, 500, 560, 610, 240, 760)
+
+[node name="PondWalk" type="Polygon2D" parent="World"]
+color = Color(0.81, 0.73, 0.52, 1)
+polygon = PackedVector2Array(1090, 690, 1400, 610, 1520, 690, 1170, 780)
+
 [node name="Pond" type="Polygon2D" parent="World"]
 color = Color(0.31, 0.56, 0.89, 1)
 polygon = PackedVector2Array(1280, 420, 1720, 420, 1765, 600, 1240, 620)
 
+[node name="PondGlow" type="Polygon2D" parent="World"]
+color = Color(0.75, 0.91, 1, 0.22)
+polygon = PackedVector2Array(1310, 445, 1690, 445, 1720, 580, 1285, 592)
+
 [node name="CombatShrine" type="Polygon2D" parent="World"]
 color = Color(0.55, 0.22, 0.48, 1)
 polygon = PackedVector2Array(1370, 700, 1600, 700, 1625, 820, 1340, 820)
+
+[node name="NapNest" type="Polygon2D" parent="World"]
+color = Color(0.93, 0.83, 0.58, 1)
+polygon = PackedVector2Array(170, 360, 410, 320, 520, 420, 490, 560, 250, 590, 120, 500)
+
+[node name="NapNestInner" type="Polygon2D" parent="World"]
+color = Color(0.99, 0.9, 0.72, 1)
+polygon = PackedVector2Array(225, 390, 380, 360, 445, 430, 420, 515, 275, 535, 190, 470)
+
+[node name="NapNestLabel" type="Label" parent="World"]
+offset_left = 140.0
+offset_top = 284.0
+offset_right = 476.0
+offset_bottom = 320.0
+horizontal_alignment = 1
+text = "Nido de Siestas"
+
+[node name="WelcomeSignPost" type="Polygon2D" parent="World"]
+color = Color(0.44, 0.24, 0.12, 1)
+polygon = PackedVector2Array(500, 676, 520, 676, 520, 780, 500, 780)
+
+[node name="WelcomeSignBoard" type="Polygon2D" parent="World"]
+color = Color(0.93, 0.84, 0.63, 1)
+polygon = PackedVector2Array(430, 612, 590, 612, 590, 692, 430, 692)
+
+[node name="WelcomeSignLabel" type="Label" parent="World"]
+offset_left = 356.0
+offset_top = 574.0
+offset_right = 666.0
+offset_bottom = 606.0
+horizontal_alignment = 1
+text = "Cartel de Bienvenida Mullida"
 
 [node name="ShrineLabel" type="Label" parent="World"]
 offset_left = 1350.0
@@ -54,6 +98,32 @@ offset_top = 250.0
 offset_right = 1670.0
 offset_bottom = 292.0
 text = "Remolino de pelos en el cielo... como un ojo vigilante"
+
+[node name="PondLabel" type="Label" parent="World"]
+offset_left = 1230.0
+offset_top = 374.0
+offset_right = 1740.0
+offset_bottom = 410.0
+horizontal_alignment = 1
+text = "Estanque de Reflejos"
+
+[node name="WhiskerArchLeft" type="Line2D" parent="World"]
+width = 5.0
+default_color = Color(0.93, 0.88, 0.74, 1)
+points = PackedVector2Array(820, 650, 890, 520, 980, 490)
+
+[node name="WhiskerArchRight" type="Line2D" parent="World"]
+width = 5.0
+default_color = Color(0.93, 0.88, 0.74, 1)
+points = PackedVector2Array(980, 490, 1070, 520, 1140, 650)
+
+[node name="WhiskerArchLabel" type="Label" parent="World"]
+offset_left = 790.0
+offset_top = 444.0
+offset_right = 1174.0
+offset_bottom = 476.0
+horizontal_alignment = 1
+text = "Arco de Bigotes"
 
 [node name="UmbralGate" type="Polygon2D" parent="World"]
 color = Color(0.14, 0.12, 0.18, 1)
@@ -145,6 +215,45 @@ shape = SubResource("RectangleShape2D_area")
 [node name="EchoFog" type="Polygon2D" parent="MalikethEchoTrigger"]
 color = Color(0.61, 0.33, 0.77, 0.25)
 polygon = PackedVector2Array(-100, -55, 100, -55, 100, 55, -100, 55)
+
+[node name="WelcomeSignTrigger" type="Area2D" parent="."]
+position = Vector2(510, 700)
+script = ExtResource("7_story")
+trigger_flag = "ch1_world_context_seen"
+dialogue_id = "ch1_welcome_sign"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WelcomeSignTrigger"]
+shape = SubResource("RectangleShape2D_area")
+
+[node name="WelcomeSignPulse" type="Polygon2D" parent="WelcomeSignTrigger"]
+color = Color(0.98, 0.92, 0.66, 0.15)
+polygon = PackedVector2Array(-95, -50, 95, -50, 95, 50, -95, 50)
+
+[node name="NapNestTrigger" type="Area2D" parent="."]
+position = Vector2(310, 455)
+script = ExtResource("7_story")
+trigger_flag = "ch1_nap_nest_seen"
+dialogue_id = "ch1_nap_nest"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="NapNestTrigger"]
+shape = SubResource("RectangleShape2D_area")
+
+[node name="NapNestPulse" type="Polygon2D" parent="NapNestTrigger"]
+color = Color(0.99, 0.9, 0.72, 0.16)
+polygon = PackedVector2Array(-110, -58, 110, -58, 110, 58, -110, 58)
+
+[node name="PondReflectionTrigger" type="Area2D" parent="."]
+position = Vector2(1440, 545)
+script = ExtResource("7_story")
+trigger_flag = "ch1_pond_reflection_seen"
+dialogue_id = "ch1_pond_reflection"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PondReflectionTrigger"]
+shape = SubResource("RectangleShape2D_area")
+
+[node name="PondReflectionPulse" type="Polygon2D" parent="PondReflectionTrigger"]
+color = Color(0.71, 0.92, 1, 0.16)
+polygon = PackedVector2Array(-110, -58, 110, -58, 110, 58, -110, 58)
 
 [node name="ChapterExit" type="Area2D" parent="."]
 position = Vector2(1788, 740)
@@ -265,7 +374,7 @@ offset_top = 16.0
 offset_right = 948.0
 offset_bottom = 48.0
 horizontal_alignment = 2
-text = "Sigue el rastro de pelusa oscura"
+text = "Revisa la pradera y sigue el rastro de pelusa oscura"
 
 [node name="WelcomeTone" type="Label" parent="HUD"]
 offset_left = 160.0
