@@ -1,6 +1,7 @@
 {
   "id": "vivis",
   "display_name": "Vivis",
+  "short_name": "Vivis",
   "role": "protagonista",
   "max_hp": 100,
   "base_speed": 12,

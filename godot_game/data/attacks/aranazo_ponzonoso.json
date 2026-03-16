@@ -1,10 +1,10 @@
 {
   "id": "aranazo_ponzonoso",
-  "display_name": "Arañazo ponzoñoso",
+  "display_name": "Aranazo ponzonoso",
   "owner": "wiky_wikerman",
   "type": "physical_poison",
   "damage_min": 13,
   "damage_max": 25,
   "status_effect": "poison",
-  "description": "Wiky Wikerman el asesino de wiskys lanza un arañazo con veneno felino."
+  "description": "Wiky lanza un aranazo con veneno felino."
 }

@@ -189,7 +189,8 @@ completion_flag = "ch1_guardian_defeated"
 locked_dialogue_id = "ch1_altar_locked"
 prep_dialogue_id = "ch1_combat_prep"
 enemy_id = "pelusa_corrupta"
-objective_after = "Derrota a la pelusa corrupta para recuperar la resonancia."
+chapter_id = "ch1"
+objective_id_before_combat = "after_clue"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="CombatTrigger"]
 shape = SubResource("RectangleShape2D_area")
@@ -203,7 +204,7 @@ offset_left = -150.0
 offset_top = -96.0
 offset_right = 150.0
 offset_bottom = -68.0
-text = "Altar hostil · activa combate"
+text = "Altar hostil - activa combate"
 
 [node name="MalikethEchoTrigger" type="Area2D" parent="."]
 position = Vector2(1100, 530)
@@ -328,13 +329,13 @@ offset_bottom = 142.0
 [node name="VBoxContainer" type="VBoxContainer" parent="HUD/PanelContainer"]
 
 [node name="ChapterLabel" type="Label" parent="HUD/PanelContainer/VBoxContainer"]
-text = "Capitulo"
+text = "Capitulo actual"
 
 [node name="ObjectiveLabel" type="Label" parent="HUD/PanelContainer/VBoxContainer"]
-text = "Objetivo"
+text = "Objetivo en curso"
 
 [node name="ZoneLabel" type="Label" parent="HUD/PanelContainer/VBoxContainer"]
-text = "Zona"
+text = "Zona activa"
 
 [node name="ContextLabel" type="Label" parent="HUD/PanelContainer/VBoxContainer"]
 text = "Contexto"
@@ -350,12 +351,12 @@ offset_bottom = 92.0
 
 [node name="Title" type="Label" parent="HUD/AnnouncementPanel/VBoxContainer"]
 horizontal_alignment = 1
-text = "Aviso"
+text = "Evento"
 
 [node name="Subtitle" type="Label" parent="HUD/AnnouncementPanel/VBoxContainer"]
 horizontal_alignment = 1
 autowrap_mode = 3
-text = "Subtitulo"
+text = "Mensaje"
 
 [node name="AnnouncementTimer" type="Timer" parent="HUD"]
 wait_time = 2.6
@@ -366,7 +367,7 @@ offset_left = 14.0
 offset_top = 500.0
 offset_right = 640.0
 offset_bottom = 528.0
-text = "WASD mover · triggers automaticos · SPACE dialogo"
+text = "WASD mover - SPACE continuar dialogos"
 
 [node name="ZoneHint" type="Label" parent="HUD"]
 offset_left = 610.0
@@ -390,6 +391,6 @@ offset_top = 500.0
 offset_right = 952.0
 offset_bottom = 528.0
 horizontal_alignment = 2
-text = "CH1"
+text = "Avance"
 
 [connection signal="timeout" from="HUD/AnnouncementTimer" to="HUD" method="_on_announcement_timer_timeout"]

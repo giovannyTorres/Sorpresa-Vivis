@@ -24,10 +24,10 @@ offset_bottom = 94.0
 [node name="VBox" type="VBoxContainer" parent="CanvasLayer/HeaderPanel"]
 
 [node name="Title" type="Label" parent="CanvasLayer/HeaderPanel/VBox"]
-text = "Combate CH1"
+text = "Combate"
 
 [node name="TurnStatus" type="Label" parent="CanvasLayer/HeaderPanel/VBox"]
-text = "Turno"
+text = "Estado del turno"
 
 [node name="PartyPanel" type="PanelContainer" parent="CanvasLayer"]
 offset_left = 20.0
@@ -59,12 +59,12 @@ offset_bottom = 266.0
 [node name="VBox" type="VBoxContainer" parent="CanvasLayer/EnemyPanel"]
 
 [node name="EnemyTitle" type="Label" parent="CanvasLayer/EnemyPanel/VBox"]
-text = "Enemigo"
+text = "Amenaza"
 
 [node name="EnemyCard" type="PanelContainer" parent="CanvasLayer/EnemyPanel/VBox"]
 
 [node name="EnemyHP" type="Label" parent="CanvasLayer/EnemyPanel/VBox/EnemyCard"]
-text = "Enemy HP"
+text = "Enemigo HP"
 
 [node name="ActionPanel" type="PanelContainer" parent="CanvasLayer"]
 offset_left = 20.0
@@ -75,16 +75,17 @@ offset_bottom = 520.0
 [node name="VBox" type="VBoxContainer" parent="CanvasLayer/ActionPanel"]
 
 [node name="ActionsTitle" type="Label" parent="CanvasLayer/ActionPanel/VBox"]
-text = "Acciones"
+text = "Acciones disponibles"
 
 [node name="VivisAttackButton" type="Button" parent="CanvasLayer/ActionPanel/VBox"]
-text = "Vivis · Ráfaga de puños tiernos"
+text = "Ataque de Vivis"
 
 [node name="WikyAttackButton" type="Button" parent="CanvasLayer/ActionPanel/VBox"]
-text = "Wiky · Arañazo ponzoñoso"
+text = "Ataque de Wiky"
 
 [node name="Hint" type="Label" parent="CanvasLayer/ActionPanel/VBox"]
-text = "Solo se habilita el botón del personaje en turno."
+autowrap_mode = 3
+text = "Solo actua quien tenga el turno."
 
 [node name="LogPanel" type="PanelContainer" parent="CanvasLayer"]
 offset_left = 490.0
@@ -95,7 +96,7 @@ offset_bottom = 520.0
 [node name="VBox" type="VBoxContainer" parent="CanvasLayer/LogPanel"]
 
 [node name="LogTitle" type="Label" parent="CanvasLayer/LogPanel/VBox"]
-text = "Bitácora de combate"
+text = "Bitacora del encuentro"
 
 [node name="LogText" type="RichTextLabel" parent="CanvasLayer/LogPanel/VBox"]
 size_flags_vertical = 3
@@ -107,7 +108,7 @@ offset_left = 20.0
 offset_top = 88.0
 offset_right = 830.0
 offset_bottom = 118.0
-text = "Resumen"
+text = "Resumen del combate"
 
 [node name="TurnManager" type="Node" parent="."]
 script = ExtResource("2_turn")

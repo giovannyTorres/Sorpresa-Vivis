@@ -9,10 +9,11 @@ const PARTY_ORDER := ["vivis", "wiky_wikerman", "enemy"]
 
 @onready var title_label: Label = $CanvasLayer/HeaderPanel/VBox/Title
 @onready var status_label: Label = $CanvasLayer/HeaderPanel/VBox/TurnStatus
+@onready var summary_label: Label = $CanvasLayer/Summary
 
-@onready var vivis_hp_label: Label = $CanvasLayer/PartyPanel/VBox/VivisHP
-@onready var wiky_hp_label: Label = $CanvasLayer/PartyPanel/VBox/WikyHP
-@onready var enemy_hp_label: Label = $CanvasLayer/EnemyPanel/VBox/EnemyHP
+@onready var vivis_hp_label: Label = $CanvasLayer/PartyPanel/VBox/VivisCard/VivisHP
+@onready var wiky_hp_label: Label = $CanvasLayer/PartyPanel/VBox/WikyCard/WikyHP
+@onready var enemy_hp_label: Label = $CanvasLayer/EnemyPanel/VBox/EnemyCard/EnemyHP
 
 @onready var vivis_attack_button: Button = $CanvasLayer/ActionPanel/VBox/VivisAttackButton
 @onready var wiky_attack_button: Button = $CanvasLayer/ActionPanel/VBox/WikyAttackButton
@@ -43,49 +44,42 @@ func _load_combat_data() -> void:
 		"wiky_wikerman": _build_party_actor("res://data/actors/wiky_wikerman.json", "aranazo_ponzonoso"),
 		"enemy": _build_enemy_actor(_enemy_id)
 	}
-	var ids := []
+	var ids: Array[String] = []
 	for actor_id in _actors.keys():
 		for attack_id in _actors[actor_id].get("attack_ids", []):
 			ids.append(str(attack_id))
 	for attack_id in ids:
-		_attack_data[attack_id] = _load_json("res://data/attacks/%s.json" % attack_id)
+		_attack_data[attack_id] = GameState.read_json("res://data/attacks/%s.json" % attack_id)
+	_sync_action_labels()
 
 func _build_party_actor(path: String, fallback_attack: String) -> Dictionary:
-	var data := _load_json(path)
+	var data := GameState.read_json(path)
 	return {
-		"id": data.get("id", ""),
-		"name": data.get("display_name", data.get("id", "Actor")),
+		"id": str(data.get("id", "")),
+		"name": str(data.get("display_name", data.get("id", "Actor"))),
+		"short_name": str(data.get("short_name", data.get("display_name", data.get("id", "Actor")))),
 		"hp": int(data.get("max_hp", 100)),
 		"max_hp": int(data.get("max_hp", 100)),
 		"attack_ids": data.get("attacks", [fallback_attack])
 	}
 
 func _build_enemy_actor(enemy_id: String) -> Dictionary:
-	var data := _load_json("res://data/actors/%s.json" % enemy_id)
-	var enemy_name := data.get("display_name", data.get("name", enemy_id.capitalize()))
+	var data := GameState.read_json("res://data/actors/%s.json" % enemy_id)
+	var enemy_name := str(data.get("display_name", data.get("name", enemy_id.capitalize())))
 	return {
 		"id": enemy_id,
 		"name": enemy_name,
+		"short_name": str(data.get("short_name", enemy_name)),
 		"hp": int(data.get("max_hp", data.get("hp", 50))),
 		"max_hp": int(data.get("max_hp", data.get("hp", 50))),
 		"attack_ids": data.get("attack_ids", ["pelotazo_pelusa"])
 	}
 
-func _load_json(path: String) -> Dictionary:
-	var file := FileAccess.open(path, FileAccess.READ)
-	if file == null:
-		push_warning("No se pudo abrir data: %s" % path)
-		return {}
-	var parsed: Variant = JSON.parse_string(file.get_as_text())
-	if typeof(parsed) != TYPE_DICTIONARY:
-		return {}
-	return parsed as Dictionary
-
 func _on_turn_started(actor_id: String) -> void:
 	if _combat_ended:
 		return
-	var actor_name := _actors[actor_id].get("name", actor_id)
-	status_label.text = "Turno de %s" % actor_name
+	var actor_name := _actors[actor_id].get("short_name", actor_id)
+	status_label.text = "Turno actual: %s" % actor_name
 	vivis_attack_button.disabled = actor_id != "vivis"
 	wiky_attack_button.disabled = actor_id != "wiky_wikerman"
 	if actor_id == "enemy":
@@ -122,10 +116,10 @@ func _resolve_attack(attacker_id: String, defender_id: String, attack_id: String
 	var attack := _attack_data.get(attack_id, {"display_name": attack_id, "damage_min": 5, "damage_max": 8})
 	var result := action_resolver.resolve_attack(attacker, defender, attack)
 	var line := "%s usa %s y causa %s de dano a %s." % [
-		attacker.get("name", attacker_id),
+		attacker.get("short_name", attacker_id),
 		attack.get("display_name", attack_id),
 		result.get("damage", 0),
-		defender.get("name", defender_id)
+		defender.get("short_name", defender_id)
 	]
 	_append_log(line)
 	var finished := _evaluate_combat_state()
@@ -144,9 +138,11 @@ func _on_combat_finished(victory: bool) -> void:
 	vivis_attack_button.disabled = true
 	wiky_attack_button.disabled = true
 	if victory:
+		status_label.text = "Combate resuelto"
 		_append_log("Victoria. La Pelusa Corrupta se disipa.")
 		_resolve_victory()
 		return
+	status_label.text = "Retirada temporal"
 	_append_log("Derrota temporal. Vivis y Wiky retroceden para reagruparse.")
 	_resolve_defeat()
 
@@ -156,6 +152,7 @@ func _resolve_victory() -> void:
 		GameState.mark_flag("ch1_guardian_defeated", true)
 		GameState.mark_flag("ch1_progress_gate_unlocked", true)
 		GameState.set_objective_by_id("ch1", "after_combat")
+	GameState.queue_banner("Victoria", "El guardian del altar ha sido purgado.", "success")
 	await get_tree().create_timer(0.9).timeout
 	var return_scene := str(GameState.combat_context.get("return_scene", DEFAULT_RETURN_SCENE))
 	SceneRouter.return_to_overworld(return_scene)
@@ -163,23 +160,49 @@ func _resolve_victory() -> void:
 func _resolve_defeat() -> void:
 	GameState.mark_flag("ch1_guardian_defeated", false)
 	GameState.set_objective("Recupera fuerzas e intentalo de nuevo en el altar.")
+	GameState.queue_banner("Retirada temporal", "Vuelve al altar cuando el equipo este listo.", "warning")
 	await get_tree().create_timer(0.9).timeout
 	var return_scene := str(GameState.combat_context.get("return_scene", DEFAULT_RETURN_SCENE))
 	SceneRouter.return_to_overworld(return_scene)
 
 func _append_log(text: String) -> void:
-	log_label.text += "\n%s" % text
+	if log_label.text.is_empty():
+		log_label.text = text
+	else:
+		log_label.text += "\n%s" % text
 	log_label.scroll_to_line(log_label.get_line_count())
 
 func _refresh_labels() -> void:
-	var combat_chapter := str(GameState.combat_context.get("chapter_id", GameState.current_chapter)).to_upper()
-	title_label.text = "Combate %s · %s" % [combat_chapter, _actors["enemy"].get("name", "Enemigo")]
-	vivis_hp_label.text = "Vivis HP: %s / %s" % [_actors["vivis"].get("hp", 0), _actors["vivis"].get("max_hp", 0)]
-	wiky_hp_label.text = "Wiky HP: %s / %s" % [_actors["wiky_wikerman"].get("hp", 0), _actors["wiky_wikerman"].get("max_hp", 0)]
-	enemy_hp_label.text = "%s HP: %s / %s" % [
-		_actors["enemy"].get("name", "Enemigo"),
+	var combat_chapter := str(GameState.combat_context.get("chapter_id", GameState.current_chapter))
+	title_label.text = "Combate - %s" % GameState.get_chapter_label(combat_chapter)
+	summary_label.text = "Objetivo del encuentro: despejar el paso y volver al mapa sin perder el avance."
+	vivis_hp_label.text = "%s - %s / %s HP" % [
+		_actors["vivis"].get("short_name", "Vivis"),
+		_actors["vivis"].get("hp", 0),
+		_actors["vivis"].get("max_hp", 0)
+	]
+	wiky_hp_label.text = "%s - %s / %s HP" % [
+		_actors["wiky_wikerman"].get("short_name", "Wiky"),
+		_actors["wiky_wikerman"].get("hp", 0),
+		_actors["wiky_wikerman"].get("max_hp", 0)
+	]
+	enemy_hp_label.text = "%s - %s / %s HP" % [
+		_actors["enemy"].get("short_name", "Enemigo"),
 		_actors["enemy"].get("hp", 0),
 		_actors["enemy"].get("max_hp", 0)
 	]
 	if log_label.text.is_empty():
-		log_label.text = "El combate empieza. Usa los ataques de Vivis y Wiky en su turno."
+		log_label.text = "El combate comienza. Aprovecha cada turno para sostener el avance del capitulo."
+
+func _sync_action_labels() -> void:
+	vivis_attack_button.text = _format_action_label("vivis")
+	wiky_attack_button.text = _format_action_label("wiky_wikerman")
+
+func _format_action_label(actor_id: String) -> String:
+	var actor := _actors.get(actor_id, {})
+	var attack_id := str((actor.get("attack_ids", [""]) as Array)[0])
+	var attack := _attack_data.get(attack_id, {})
+	return "%s - %s" % [
+		actor.get("short_name", actor_id),
+		attack.get("display_name", attack_id)
+	]
