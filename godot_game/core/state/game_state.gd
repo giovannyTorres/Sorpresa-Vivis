@@ -19,6 +19,7 @@ var combat_context: Dictionary = {}
 
 var _chapter_flow_data: Dictionary = {}
 var _chapter_objectives: Dictionary = {}
+var _queued_banner: Dictionary = {}
 
 func reset_for_new_game() -> void:
 	current_chapter = "ch1"
@@ -52,6 +53,7 @@ func reset_for_new_game() -> void:
 	}
 	combat_context = {}
 	narrative_locked = false
+	_queued_banner.clear()
 	_ensure_chapter_data()
 	load_chapter("ch1")
 	save_dirty.emit()
@@ -80,7 +82,7 @@ func load_chapter(chapter_id: String) -> void:
 	load_chapter_data(path)
 
 func load_chapter_data(path: String) -> void:
-	var chapter_data := _load_json(path)
+	var chapter_data := read_json(path)
 	if chapter_data.is_empty():
 		push_warning("No se pudo abrir capitulo: %s" % path)
 		return
@@ -120,14 +122,29 @@ func set_narrative_locked(value: bool) -> void:
 func push_banner(title: String, subtitle: String = "", tone: String = "info") -> void:
 	banner_requested.emit(title, subtitle, tone)
 
-func _ensure_chapter_data() -> void:
-	if _chapter_flow_data.is_empty():
-		var flow_root := _load_json("res://data/events/chapter_flow.json")
-		_chapter_flow_data = flow_root.get("chapters", {})
-	if _chapter_objectives.is_empty():
-		_chapter_objectives = _load_json("res://data/events/chapter_objectives.json")
+func queue_banner(title: String, subtitle: String = "", tone: String = "info") -> void:
+	_queued_banner = {
+		"title": title,
+		"subtitle": subtitle,
+		"tone": tone
+	}
 
-func _load_json(path: String) -> Dictionary:
+func consume_queued_banner() -> Dictionary:
+	var payload := _queued_banner.duplicate(true)
+	_queued_banner.clear()
+	return payload
+
+func get_chapter_label(chapter_id: String = "") -> String:
+	var effective_id := chapter_id
+	if effective_id.is_empty():
+		effective_id = current_chapter
+	if effective_id.begins_with("ch"):
+		var suffix := effective_id.trim_prefix("ch")
+		if suffix.is_valid_int():
+			return "Capitulo %s" % suffix
+	return effective_id.to_upper()
+
+func read_json(path: String) -> Dictionary:
 	var file := FileAccess.open(path, FileAccess.READ)
 	if file == null:
 		return {}
@@ -135,3 +152,10 @@ func _load_json(path: String) -> Dictionary:
 	if typeof(parsed) != TYPE_DICTIONARY:
 		return {}
 	return parsed as Dictionary
+
+func _ensure_chapter_data() -> void:
+	if _chapter_flow_data.is_empty():
+		var flow_root := read_json("res://data/events/chapter_flow.json")
+		_chapter_flow_data = flow_root.get("chapters", {})
+	if _chapter_objectives.is_empty():
+		_chapter_objectives = read_json("res://data/events/chapter_objectives.json")

@@ -29,7 +29,7 @@ func _exit_tree() -> void:
 func _on_dialogue_finished(dialogue_id: String) -> void:
 	if dialogue_id == str(_flow.get("entry_dialogue", "")):
 		GameState.push_banner(
-			"Capitulo %s" % chapter_id.to_upper(),
+			GameState.get_chapter_label(chapter_id),
 			GameState.current_chapter_name,
 			"chapter"
 		)
@@ -45,7 +45,7 @@ func _on_dialogue_finished(dialogue_id: String) -> void:
 		var exit_flag := str(_flow.get("exit_unlock_flag", ""))
 		if not exit_flag.is_empty():
 			GameState.mark_flag(exit_flag, true)
-			GameState.push_banner("Nuevo destino", "La ruta hacia CH2 ya puede cruzarse.", "transition")
+			GameState.push_banner("Nuevo destino", "La ruta hacia el siguiente capitulo ya puede cruzarse.", "transition")
 	_sync_objective()
 	_update_progress()
 
@@ -56,6 +56,8 @@ func _mark_started() -> void:
 	if GameState.world_flags.get(started_flag, false):
 		return
 	GameState.mark_flag(started_flag, true)
+	if str(_flow.get("entry_dialogue", "")).is_empty():
+		GameState.push_banner(GameState.get_chapter_label(chapter_id), str(_flow.get("zone_name", "")), "chapter")
 
 func _try_start_dialogue() -> void:
 	var entry_flag := str(_flow.get("entry_flag", ""))
@@ -85,7 +87,7 @@ func _apply_completion() -> void:
 	for reward_flag in _flow.get("completion_rewards", []):
 		GameState.mark_flag(str(reward_flag), true)
 	GameState.push_banner(
-		"%s completado" % chapter_id.to_upper(),
+		"%s completado" % GameState.get_chapter_label(chapter_id),
 		"La aventura avanza hacia el siguiente destino.",
 		"success"
 	)
@@ -96,6 +98,7 @@ func _sync_objective() -> void:
 		var state := state_data as Dictionary
 		if _matches_state(state):
 			GameState.set_objective_by_id(chapter_id, str(state.get("objective_id", "")))
+			return
 
 func _matches_state(state: Dictionary) -> bool:
 	for flag_name in state.get("require_flags", []):
@@ -113,7 +116,7 @@ func _update_progress() -> void:
 		var label := str(progress.get("label", "Paso"))
 		var flag_name := str(progress.get("flag", ""))
 		chunks.append("%s:%s" % [label, _mark(GameState.world_flags.get(flag_name, false))])
-	progress_label.text = "%s · %s" % [chapter_id.to_upper(), " · ".join(chunks)]
+	progress_label.text = "Avance - %s" % " - ".join(chunks)
 
 func _mark(value: bool) -> String:
-	return "OK" if value else "--"
+	return "OK" if value else ".."

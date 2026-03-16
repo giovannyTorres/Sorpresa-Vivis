@@ -1,7 +1,6 @@
 extends Node
 class_name GameBootstrap
 
-const DEFAULT_OVERWORLD_SCENE := "res://overworld/scenes/map_pradera_bigotes.tscn"
 const INTRO_SCENE := "res://narrative/cutscenes/intro_capture.tscn"
 const DEFAULT_COMBAT_SCENE := "res://combat/scenes/combat_scene.tscn"
 

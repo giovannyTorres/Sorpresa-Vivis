@@ -33,7 +33,7 @@ func _on_dialogue_started(_dialogue_id: String) -> void:
 	_active = true
 	visible = true
 	GameState.set_narrative_locked(true)
-	hint_label.text = "SPACE para continuar"
+	hint_label.text = "SPACE - continuar"
 
 func _on_dialogue_line_changed(speaker: String, text: String) -> void:
 	speaker_label.text = speaker

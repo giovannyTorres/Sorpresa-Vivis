@@ -7,7 +7,8 @@ class_name Ch1CombatGateTrigger
 @export var prep_dialogue_id: String = ""
 @export var enemy_id: String = "pelusa_corrupta"
 @export var return_scene: String = "res://overworld/scenes/map_pradera_bigotes.tscn"
-@export var objective_after: String = ""
+@export var chapter_id: String = "ch1"
+@export var objective_id_before_combat: String = "after_clue"
 
 var _pending_combat: bool = false
 
@@ -41,10 +42,10 @@ func _on_dialogue_finished(dialogue_id: String) -> void:
 func _start_combat() -> void:
 	_pending_combat = false
 	GameState.mark_flag("ch1_combat_started", true)
-	if not objective_after.is_empty():
-		GameState.set_objective(objective_after)
+	if not objective_id_before_combat.is_empty():
+		GameState.set_objective_by_id(chapter_id, objective_id_before_combat)
 	EventBus.request_combat(enemy_id, {
 		"source": "ch1_guardian_gate",
-		"chapter_id": "ch1",
+		"chapter_id": chapter_id,
 		"return_scene": return_scene
 	})

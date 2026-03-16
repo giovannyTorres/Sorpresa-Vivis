@@ -25,26 +25,29 @@ func _ready() -> void:
 	_on_zone_changed(GameState.current_zone_name)
 	_last_chapter_seen = GameState.current_chapter
 	_last_objective_seen = GameState.current_objective
+	var queued_banner := GameState.consume_queued_banner()
+	if not queued_banner.is_empty():
+		_show_banner(str(queued_banner.get("title", "")), str(queued_banner.get("subtitle", "")))
 	_ready_for_feedback = true
 
 func _on_chapter_changed(chapter_id: String) -> void:
 	var chapter_name := GameState.current_chapter_name
 	if chapter_name.is_empty():
 		chapter_name = chapter_id.to_upper()
-	chapter_label.text = "%s · %s" % [chapter_id.to_upper(), chapter_name]
-	context_label.text = GameState.chapter_context
+	chapter_label.text = "%s - %s" % [GameState.get_chapter_label(chapter_id), chapter_name]
+	context_label.text = "Contexto: %s" % GameState.chapter_context
 	if _ready_for_feedback and chapter_id != _last_chapter_seen:
-		_show_banner("Capitulo %s" % chapter_id.to_upper(), chapter_name)
+		_show_banner(GameState.get_chapter_label(chapter_id), chapter_name)
 	_last_chapter_seen = chapter_id
 
 func _on_objective_changed(objective_text: String) -> void:
-	objective_label.text = "Objetivo: %s" % objective_text
+	objective_label.text = "Objetivo en curso: %s" % objective_text
 	if _ready_for_feedback and not objective_text.is_empty() and objective_text != _last_objective_seen:
-		_show_banner("Nuevo objetivo", objective_text)
+		_show_banner("Objetivo actualizado", objective_text)
 	_last_objective_seen = objective_text
 
 func _on_zone_changed(zone_name: String) -> void:
-	zone_label.text = "Zona: %s" % zone_name
+	zone_label.text = "Zona activa: %s" % zone_name
 
 func _on_banner_requested(title: String, subtitle: String, _tone: String) -> void:
 	_show_banner(title, subtitle)
