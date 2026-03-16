@@ -7,7 +7,7 @@
       },
       {
         "speaker": "Vivis",
-        "text": "Es una pista de Giovanny. Maliketh lo está empujando hacia el altar."
+        "text": "Es una pista de Giovanny. Maliketh lo esta empujando hacia el altar."
       },
       {
         "speaker": "Wiky Wikerman el asesino de wiskys",
@@ -31,15 +31,15 @@
     "lines": [
       {
         "speaker": "Eco de Maliketh",
-        "text": "¿Creían que tocarían mi altar sin precio? Alimenten a mi guardián de pelusa corrupta."
+        "text": "Creyeron que podian tocar mi altar sin precio. Alimenten a mi guardian de pelusa corrupta."
       },
       {
         "speaker": "Vivis",
-        "text": "Wiky, conmigo. Ráfaga de puños tiernos al frente."
+        "text": "Wiky, conmigo. Rafaga de punos tiernos al frente."
       },
       {
         "speaker": "Wiky Wikerman el asesino de wiskys",
-        "text": "Y Arañazo ponzoñoso por el costado. Vamos a romper esta cortina de pelos."
+        "text": "Y Aranazo ponzonoso por el costado. Vamos a romper esta cortina de pelos."
       }
     ]
   },
@@ -51,11 +51,35 @@
       },
       {
         "speaker": "Vivis",
-        "text": "Giovanny sigue vivo. Esta resonancia marca su rastro."
+        "text": "Giovanny sigue vivo. Esta resonancia marca un camino fuera de la pradera."
       },
       {
         "speaker": "Wiky Wikerman el asesino de wiskys",
-        "text": "Capítulo cerrado. Maliketh ya sabe que vamos en serio."
+        "text": "CH1 queda cerrado. Ya no estamos investigando: ahora estamos persiguiendo a Maliketh."
+      }
+    ]
+  },
+  "ch1_to_ch2_transition": {
+    "lines": [
+      {
+        "speaker": "Narrador",
+        "text": "El cascabel responde con un pulso seco. A lo lejos se abre un sendero donde antes solo habia neblina."
+      },
+      {
+        "speaker": "Eco de Maliketh",
+        "text": "Sigan si quieren. Cada tramo nuevo me pertenece mas que el anterior, y Giovanny ya escucha mi voz sin pausa."
+      },
+      {
+        "speaker": "Vivis",
+        "text": "Perfecto. Entonces la siguiente parada es donde tu sombra se vuelve mas densa."
+      }
+    ]
+  },
+  "ch1_exit_locked": {
+    "lines": [
+      {
+        "speaker": "Narrador",
+        "text": "La resonancia todavia no encuentra salida. Primero debes cerrar el conflicto del altar."
       }
     ]
   }

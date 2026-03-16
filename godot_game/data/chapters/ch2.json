@@ -1,0 +1,11 @@
+{
+  "id": "ch2",
+  "name": "Sendero del Umbral",
+  "context": "La resonancia del cascabel abre una ruta torcida: Maliketh ya no susurra desde lejos, ahora deja cicatrices visibles en el mundo.",
+  "main_objective": "Avanza por el Sendero del Umbral y confirma hacia donde arrastra Maliketh a Giovanny.",
+  "zone": {
+    "name": "Sendero del Umbral",
+    "narrative_role": "Primer paso fuera de la pradera segura y teaser de una persecucion por etapas.",
+    "tone": "Continuacion tensa con horizonte roto"
+  }
+}

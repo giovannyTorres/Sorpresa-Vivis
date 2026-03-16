@@ -6,7 +6,7 @@ const CH1_OVERWORLD_SCENE := "res://overworld/scenes/map_pradera_bigotes.tscn"
 @onready var subtitle_label: Label = $CanvasLayer/Subtitle
 
 func _ready() -> void:
-	GameState.load_chapter_data("res://data/chapters/ch1.json")
+	GameState.load_chapter("ch1")
 	title_label.text = "CH1 · %s" % GameState.current_chapter_name
 	subtitle_label.text = GameState.chapter_context
 	EventBus.dialogue_finished.connect(_on_dialogue_finished)

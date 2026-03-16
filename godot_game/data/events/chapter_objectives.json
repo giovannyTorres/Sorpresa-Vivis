@@ -1,0 +1,13 @@
+{
+  "ch1": {
+    "start": "Explora la Pradera de Bigotes y localiza una pista de Giovanny.",
+    "after_clue": "Llega al Altar de Maliketh para purgar la pelusa corrupta.",
+    "after_combat": "Regresa al claro inicial y confirma la resonancia del cascabel.",
+    "travel_to_ch2": "Sigue la resonancia hacia el Sendero del Umbral.",
+    "completed": "CH1 completado: la ruta hacia CH2 ya esta abierta."
+  },
+  "ch2": {
+    "start": "Avanza por el Sendero del Umbral y mide cuanto se ha extendido Maliketh.",
+    "after_echo": "Busca una forma de cruzar la grieta de pelusa y seguir el rastro de Giovanny."
+  }
+}

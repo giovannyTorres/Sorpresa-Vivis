@@ -1,0 +1,34 @@
+{
+  "ch2_intro": {
+    "lines": [
+      {
+        "speaker": "Narrador",
+        "text": "El Sendero del Umbral late como una herida abierta. La hierba limpia de la pradera queda atras."
+      },
+      {
+        "speaker": "Vivis",
+        "text": "Esto ya no es un eco lejano. Maliketh esta deformando el camino a proposito."
+      },
+      {
+        "speaker": "Wiky Wikerman el asesino de wiskys",
+        "text": "Bien. Eso significa que vamos por el rumbo correcto y que ella ya se puso nerviosa."
+      }
+    ]
+  },
+  "ch2_maliketh_warning": {
+    "lines": [
+      {
+        "speaker": "Maliketh",
+        "text": "No vuelvan a llamarme desde la sombra. Miren lo que ocurre cuando dejo una sola huella mia en este mundo."
+      },
+      {
+        "speaker": "Narrador",
+        "text": "La grieta de pelusa vibra, arranca color del suelo y deja un zumbido que duele en el pecho."
+      },
+      {
+        "speaker": "Vivis",
+        "text": "Ya te sentiste presente. La proxima vez te voy a ver completa."
+      }
+    ]
+  }
+}

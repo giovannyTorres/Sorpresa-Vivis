@@ -121,7 +121,7 @@ func _resolve_attack(attacker_id: String, defender_id: String, attack_id: String
 	var defender := _actors[defender_id]
 	var attack := _attack_data.get(attack_id, {"display_name": attack_id, "damage_min": 5, "damage_max": 8})
 	var result := action_resolver.resolve_attack(attacker, defender, attack)
-	var line := "%s usa %s y causa %s de daño a %s." % [
+	var line := "%s usa %s y causa %s de dano a %s." % [
 		attacker.get("name", attacker_id),
 		attack.get("display_name", attack_id),
 		result.get("damage", 0),
@@ -144,25 +144,25 @@ func _on_combat_finished(victory: bool) -> void:
 	vivis_attack_button.disabled = true
 	wiky_attack_button.disabled = true
 	if victory:
-		_append_log("¡Victoria! La Pelusa Corrupta se disipa.")
+		_append_log("Victoria. La Pelusa Corrupta se disipa.")
 		_resolve_victory()
 		return
 	_append_log("Derrota temporal. Vivis y Wiky retroceden para reagruparse.")
 	_resolve_defeat()
 
 func _resolve_victory() -> void:
-	var is_ch1 := str(GameState.combat_context.get("chapter_id", "")) == "ch1"
-	if is_ch1:
+	var chapter_id := str(GameState.combat_context.get("chapter_id", ""))
+	if chapter_id == "ch1":
 		GameState.mark_flag("ch1_guardian_defeated", true)
 		GameState.mark_flag("ch1_progress_gate_unlocked", true)
-		GameState.set_objective("Regresa al claro inicial y confirma la pista de Giovanny.")
+		GameState.set_objective_by_id("ch1", "after_combat")
 	await get_tree().create_timer(0.9).timeout
 	var return_scene := str(GameState.combat_context.get("return_scene", DEFAULT_RETURN_SCENE))
 	SceneRouter.return_to_overworld(return_scene)
 
 func _resolve_defeat() -> void:
 	GameState.mark_flag("ch1_guardian_defeated", false)
-	GameState.set_objective("Recupera fuerzas e inténtalo de nuevo en el altar.")
+	GameState.set_objective("Recupera fuerzas e intentalo de nuevo en el altar.")
 	await get_tree().create_timer(0.9).timeout
 	var return_scene := str(GameState.combat_context.get("return_scene", DEFAULT_RETURN_SCENE))
 	SceneRouter.return_to_overworld(return_scene)
@@ -172,7 +172,8 @@ func _append_log(text: String) -> void:
 	log_label.scroll_to_line(log_label.get_line_count())
 
 func _refresh_labels() -> void:
-	title_label.text = "Combate CH1 · %s" % _actors["enemy"].get("name", "Enemigo")
+	var combat_chapter := str(GameState.combat_context.get("chapter_id", GameState.current_chapter)).to_upper()
+	title_label.text = "Combate %s · %s" % [combat_chapter, _actors["enemy"].get("name", "Enemigo")]
 	vivis_hp_label.text = "Vivis HP: %s / %s" % [_actors["vivis"].get("hp", 0), _actors["vivis"].get("max_hp", 0)]
 	wiky_hp_label.text = "Wiky HP: %s / %s" % [_actors["wiky_wikerman"].get("hp", 0), _actors["wiky_wikerman"].get("max_hp", 0)]
 	enemy_hp_label.text = "%s HP: %s / %s" % [

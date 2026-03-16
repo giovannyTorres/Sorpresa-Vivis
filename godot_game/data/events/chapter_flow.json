@@ -1,0 +1,51 @@
+{
+  "chapters": {
+    "ch1": {
+      "chapter_path": "res://data/chapters/ch1.json",
+      "zone_name": "Pradera de Bigotes",
+      "welcome_text": "Pradera de Bigotes · cierre del primer rastro",
+      "hint_text": "Sigue la pelusa oscura hasta abrir la ruta",
+      "entry_flag": "ch1_overworld_intro_seen",
+      "entry_dialogue": "ch1_overworld_intro",
+      "completion_trigger_flag": "ch1_guardian_defeated",
+      "completion_seen_flag": "ch1_resolution_seen",
+      "completion_dialogue": "ch1_resolution",
+      "transition_dialogue": "ch1_to_ch2_transition",
+      "transition_seen_flag": "ch1_transition_seen",
+      "exit_unlock_flag": "ch1_exit_to_ch2_open",
+      "completion_rewards": [
+        "ch1_completed",
+        "item_resonancia_cascabel"
+      ],
+      "progress_flags": [
+        { "label": "Pista", "flag": "ch1_clue_seen" },
+        { "label": "Combate", "flag": "ch1_guardian_defeated" },
+        { "label": "Ruta", "flag": "ch1_exit_to_ch2_open" }
+      ],
+      "objective_states": [
+        { "objective_id": "start", "block_flags": ["ch1_clue_seen"] },
+        { "objective_id": "after_clue", "require_flags": ["ch1_clue_seen"], "block_flags": ["ch1_guardian_defeated"] },
+        { "objective_id": "after_combat", "require_flags": ["ch1_guardian_defeated"], "block_flags": ["ch1_exit_to_ch2_open"] },
+        { "objective_id": "travel_to_ch2", "require_flags": ["ch1_exit_to_ch2_open"], "block_flags": ["ch2_started"] },
+        { "objective_id": "completed", "require_flags": ["ch2_started"] }
+      ]
+    },
+    "ch2": {
+      "chapter_path": "res://data/chapters/ch2.json",
+      "zone_name": "Sendero del Umbral",
+      "welcome_text": "Sendero del Umbral · el viaje continua",
+      "hint_text": "La sombra de Maliketh ya toca el horizonte",
+      "entry_flag": "ch2_intro_seen",
+      "entry_dialogue": "ch2_intro",
+      "chapter_started_flag": "ch2_started",
+      "progress_flags": [
+        { "label": "Ingreso", "flag": "ch2_intro_seen" },
+        { "label": "Eco", "flag": "ch2_echo_seen" }
+      ],
+      "objective_states": [
+        { "objective_id": "start", "block_flags": ["ch2_echo_seen"] },
+        { "objective_id": "after_echo", "require_flags": ["ch2_echo_seen"] }
+      ]
+    }
+  }
+}
