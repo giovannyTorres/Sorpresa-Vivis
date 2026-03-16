@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://project/bootstrap/game_bootstrap.gd" id="1_boot"]
+[ext_resource type="PackedScene" path="res://ui/scenes/dialogue_box.tscn" id="2_dialogue"]
 
 [node name="Main" type="Node"]
 
@@ -8,3 +9,5 @@
 
 [node name="Bootstrap" type="Node" parent="." ]
 script = ExtResource("1_boot")
+
+[node name="DialogueBox" parent="." instance=ExtResource("2_dialogue")]

@@ -13,7 +13,11 @@ func _pick_lowest_hp(party_state: Dictionary) -> String:
 	var min_hp := 999999
 	for actor_id in party_state.keys():
 		var hp := int(party_state[actor_id].get("hp", 9999))
+		if hp <= 0:
+			continue
 		if hp < min_hp:
 			min_hp = hp
 			selected = str(actor_id)
+	if selected.is_empty() and party_state.size() > 0:
+		selected = str(party_state.keys()[0])
 	return selected

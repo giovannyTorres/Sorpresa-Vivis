@@ -1,6 +1,9 @@
-[gd_scene format=3]
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://narrative/dialogue/dialogue_presenter.gd" id="1_presenter"]
 
 [node name="DialogueBox" type="CanvasLayer"]
+script = ExtResource("1_presenter")
 
 [node name="Panel" type="PanelContainer" parent="."]
 offset_left = 40.0
@@ -16,3 +19,6 @@ text = "Speaker"
 [node name="Text" type="RichTextLabel" parent="Panel/VBox"]
 bbcode_enabled = true
 text = "Texto del diálogo"
+
+[node name="Hint" type="Label" parent="Panel/VBox"]
+text = "SPACE para continuar"

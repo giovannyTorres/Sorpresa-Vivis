@@ -1,9 +1,12 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://overworld/scripts/player_controller.gd" id="1_player"]
 [ext_resource type="Script" path="res://overworld/scripts/companion_follower.gd" id="2_companion"]
 [ext_resource type="Script" path="res://ui/scripts/hud_controller.gd" id="3_hud"]
-[ext_resource type="Script" path="res://overworld/scripts/combat_test_trigger.gd" id="4_trigger"]
+[ext_resource type="Script" path="res://overworld/scripts/ch1_combat_gate_trigger.gd" id="4_trigger"]
+[ext_resource type="Script" path="res://overworld/scripts/ch1_pradera_controller.gd" id="5_map"]
+[ext_resource type="Script" path="res://overworld/scripts/maliketh_echo_trigger.gd" id="6_echo"]
+[ext_resource type="Script" path="res://overworld/scripts/ch1_story_trigger.gd" id="7_story"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_combat"]
 size = Vector2(200, 110)
@@ -12,6 +15,7 @@ size = Vector2(200, 110)
 radius = 14.0
 
 [node name="MapPraderaBigotes" type="Node2D"]
+script = ExtResource("5_map")
 
 [node name="World" type="Node2D" parent="."]
 
@@ -42,6 +46,13 @@ offset_right = 1640.0
 offset_bottom = 690.0
 text = "Altar de Maliketh"
 
+[node name="FurStorm" type="Label" parent="World"]
+offset_left = 1040.0
+offset_top = 250.0
+offset_right = 1643.0
+offset_bottom = 292.0
+text = "Remolino de pelos en el cielo... como un ojo vigilante"
+
 [node name="MapBorderTop" type="Line2D" parent="World"]
 width = 6.0
 default_color = Color(0.13, 0.31, 0.15, 1)
@@ -62,9 +73,35 @@ width = 6.0
 default_color = Color(0.13, 0.31, 0.15, 1)
 points = PackedVector2Array(1896, 100, 1896, 1030)
 
+[node name="ClueTrigger" type="Area2D" parent="."]
+position = Vector2(760, 640)
+script = ExtResource("7_story")
+trigger_flag = "ch1_clue_seen"
+dialogue_id = "ch1_clue"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ClueTrigger"]
+shape = SubResource("RectangleShape2D_combat")
+
+[node name="ClueVisual" type="Polygon2D" parent="ClueTrigger"]
+color = Color(0.95, 0.83, 0.4, 0.24)
+polygon = PackedVector2Array(-100, -55, 100, -55, 100, 55, -100, 55)
+
+[node name="CluePrompt" type="Label" parent="ClueTrigger"]
+offset_left = -156.0
+offset_top = -96.0
+offset_right = 156.0
+offset_bottom = -68.0
+text = "Pista: cascabel ennegrecido"
+
 [node name="CombatTrigger" type="Area2D" parent="."]
 position = Vector2(1480, 780)
 script = ExtResource("4_trigger")
+prerequisite_flag = "ch1_clue_seen"
+completion_flag = "ch1_guardian_defeated"
+locked_dialogue_id = "ch1_altar_locked"
+prep_dialogue_id = "ch1_combat_prep"
+enemy_id = "pelusa_corrupta"
+objective_after = "Derrota a la pelusa corrupta para recuperar la resonancia."
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="CombatTrigger"]
 shape = SubResource("RectangleShape2D_combat")
@@ -78,7 +115,18 @@ offset_left = -135.0
 offset_top = -96.0
 offset_right = 135.0
 offset_bottom = -68.0
-text = "ENTER: combate de prueba"
+text = "Altar hostil · activa combate"
+
+[node name="MalikethEchoTrigger" type="Area2D" parent="."]
+position = Vector2(1100, 530)
+script = ExtResource("6_echo")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="MalikethEchoTrigger"]
+shape = SubResource("RectangleShape2D_combat")
+
+[node name="EchoFog" type="Polygon2D" parent="MalikethEchoTrigger"]
+color = Color(0.61, 0.33, 0.77, 0.25)
+polygon = PackedVector2Array(-100, -55, 100, -55, 100, 55, -100, 55)
 
 [node name="Player" type="CharacterBody2D" parent="."]
 position = Vector2(280, 760)
@@ -133,8 +181,8 @@ script = ExtResource("3_hud")
 [node name="PanelContainer" type="PanelContainer" parent="HUD"]
 offset_left = 12.0
 offset_top = 12.0
-offset_right = 530.0
-offset_bottom = 94.0
+offset_right = 690.0
+offset_bottom = 142.0
 
 [node name="VBoxContainer" type="VBoxContainer" parent="HUD/PanelContainer"]
 
@@ -144,12 +192,18 @@ text = "Capítulo"
 [node name="ObjectiveLabel" type="Label" parent="HUD/PanelContainer/VBoxContainer"]
 text = "Objetivo"
 
+[node name="ZoneLabel" type="Label" parent="HUD/PanelContainer/VBoxContainer"]
+text = "Zona"
+
+[node name="ContextLabel" type="Label" parent="HUD/PanelContainer/VBoxContainer"]
+text = "Contexto"
+
 [node name="ControlsHint" type="Label" parent="HUD"]
 offset_left = 14.0
 offset_top = 500.0
-offset_right = 450.0
+offset_right = 640.0
 offset_bottom = 528.0
-text = "WASD mover · SPACE diálogo · ENTER combate en altar"
+text = "WASD mover · Triggers automáticos · SPACE diálogo/combate"
 
 [node name="ZoneHint" type="Label" parent="HUD"]
 offset_left = 670.0
@@ -157,4 +211,20 @@ offset_top = 16.0
 offset_right = 946.0
 offset_bottom = 48.0
 horizontal_alignment = 2
-text = "Ve al Altar de Maliketh"
+text = "Sigue el rastro de pelusa oscura"
+
+[node name="WelcomeTone" type="Label" parent="HUD"]
+offset_left = 220.0
+offset_top = 470.0
+offset_right = 894.0
+offset_bottom = 498.0
+horizontal_alignment = 1
+text = "Pradera de Bigotes"
+
+[node name="ProgressLabel" type="Label" parent="HUD"]
+offset_left = 510.0
+offset_top = 498.0
+offset_right = 952.0
+offset_bottom = 528.0
+horizontal_alignment = 2
+text = "Progreso CH1"
