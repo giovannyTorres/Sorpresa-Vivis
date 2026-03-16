@@ -102,6 +102,13 @@ size_flags_vertical = 3
 bbcode_enabled = true
 text = ""
 
+[node name="Summary" type="Label" parent="CanvasLayer"]
+offset_left = 20.0
+offset_top = 88.0
+offset_right = 830.0
+offset_bottom = 118.0
+text = "Resumen"
+
 [node name="TurnManager" type="Node" parent="."]
 script = ExtResource("2_turn")
 
