@@ -2,14 +2,35 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 game_engine="${GODOT_BIN:-godot}"
+run_checked() {
+  local validation_log
+  validation_log="$(mktemp)"
+  if ! "$@" > "$validation_log" 2>&1; then
+    cat "$validation_log"
+    rm -f "$validation_log"
+    return 1
+  fi
+  cat "$validation_log"
+  if ! python3 - "$validation_log" <<'PY'
+import sys
+from pathlib import Path
+log = Path(sys.argv[1]).read_text(errors='replace')
+sys.exit(1 if 'SCRIPT ERROR:' in log or 'ERROR:' in log else 0)
+PY
+  then
+    rm -f "$validation_log"
+    return 1
+  fi
+  rm -f "$validation_log"
+}
 mkdir -p build/windows build/linux dist
-"$game_engine" --headless --path godot_game --editor --import --quit
-"$game_engine" --headless --path godot_game --script res://tests/playthrough.gd
-"$game_engine" --headless --path godot_game --export-release Windows
-"$game_engine" --headless --path godot_game --export-release Linux
+run_checked "$game_engine" --headless --path godot_game --editor --import --quit
+run_checked "$game_engine" --headless --path godot_game --script res://tests/playthrough.gd
+run_checked "$game_engine" --headless --path godot_game --export-release Windows
+run_checked "$game_engine" --headless --path godot_game --export-release Linux
 if [[ "$(uname -s)" == Linux ]]; then
-  build/linux/Sorpresa-Vivis.x86_64 --headless --quit-after 5
-  "$game_engine" --headless --main-pack build/linux/Sorpresa-Vivis.x86_64 --script "$PWD/godot_game/tests/playthrough.gd"
+  run_checked build/linux/Sorpresa-Vivis.x86_64 --headless --quit-after 5
+  run_checked "$game_engine" --headless --main-pack build/linux/Sorpresa-Vivis.x86_64 --script "$PWD/godot_game/tests/playthrough.gd"
 fi
 python3 - <<'PY'
 from pathlib import Path
@@ -40,5 +61,6 @@ for platform, binary, label in [
     with ZipFile(archive, 'w', ZIP_DEFLATED) as package:
         package.write(Path('build') / platform / binary, binary)
         package.writestr('LEEME.txt', instructions)
+        package.write('godot_game/playable/assets/OFL.txt', 'LICENSE-Pixelify-Sans.txt')
     print(f'{archive} ({archive.stat().st_size / 1024 / 1024:.1f} MiB)')
 PY

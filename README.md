@@ -12,7 +12,7 @@ Juego **2D para PC**, corto y directo. Vivi y Wiky atraviesan la Pradera de Bigo
 | --- | --- |
 | WASD o flechas | Mover a Vivi |
 | Espacio, mantener pulsado | Disparar al enemigo más cercano |
-| E o Enter | Arañazo de Wiky; cerca de Giovanny, rescatarlo |
+| E o Enter | Magia digital de Wiky; cerca de Giovanny, rescatarlo |
 | Esc | Pausar o continuar |
 | R en derrota | Repetir el lugar actual |
 | M | Activar/desactivar sonido |
@@ -26,7 +26,17 @@ Wiky te sigue y su ataque alcanza a los enemigos cercanos; recarga en 5 segundos
 
 Usa **Godot 4.6.3** e importa `godot_game/project.godot`. Pulsa F5 para jugar. Usa OpenGL de compatibilidad y no necesita plugins.
 
-La versión jugable está en `godot_game/playable/`. Reutiliza los cuatro personajes pixelados del prototipo original. `legacy_web/`, los módulos anteriores de Godot y `sorpresa-vivis-(4.2)/` quedan como referencia; la escena de inicio ahora es la aventura completa.
+La versión jugable está en `godot_game/playable/`. `legacy_web/`, los módulos anteriores de Godot y `sorpresa-vivis-(4.2)/` quedan como referencia; la escena de inicio ahora es la aventura completa.
+
+## Diseño visual
+
+Los personajes siguen la referencia visual aportada para Sorpresa Vivis: Vivi lleva lentes, cabello castaño y sudadera rosa; Wiky es un gato blanco y negro de ojos amarillos; Giovanny lleva lentes, barba, ropa verde y mochila; Maliketh es una gata siamesa de ojos azules, pañuelo violeta y dije lunar.
+
+Los atlas transparentes conservan el arte generado a partir de esa referencia, con reposo, dos pasos de movimiento, magia, daño, victoria y retratos. Sus regiones y pivotes se definen en `playable/pixel_characters.gd` para alinear las poses al suelo. Los escenarios tienen árboles, agua, ruinas y arquitectura lunar; los efectos usan corazones rosas, cubos azules y magia violeta. El menú presenta los cuatro personajes con sus colores y marcos pixelados. La tipografía Pixelify Sans se distribuye con su licencia OFL en `playable/assets/OFL.txt` y en los ZIP.
+
+![Menú con los retratos de los cuatro personajes](docs/previews/menu.png)
+
+![Vivi y Wiky usando su magia en la pradera](docs/previews/combate.png)
 
 ## Verificación y exportación
 

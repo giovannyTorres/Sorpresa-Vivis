@@ -6,10 +6,11 @@ const FIELD := Rect2(42, 126, 876, 352)
 const SPEED := 205.0
 const MAX_HP := 6
 const ZONES := ["Pradera de Bigotes", "Sendero del Umbral", "Torre de Maliketh"]
-const VIVI := preload("res://playable/assets/vivi.svg")
-const WIKY := preload("res://playable/assets/wisky.svg")
-const MALIKETH := preload("res://playable/assets/maliketh.svg")
-const GIOVANNY := preload("res://playable/assets/giovanny.svg")
+const CharacterArt := preload("res://playable/pixel_characters.gd")
+const Effects := preload("res://playable/pixel_effects.gd")
+const Interface := preload("res://playable/pixel_interface.gd")
+const Scenery := preload("res://playable/pixel_scenery.gd")
+const PIXEL_FONT := preload("res://playable/assets/pixel_font.ttf")
 const INK := Color("201d37")
 const CREAM := Color("fff0d5")
 const PINK := Color("ff91bb")
@@ -45,9 +46,17 @@ var play_button: Button
 var menu_button: Button
 var quit_button: Button
 var sound: AudioStreamPlayer
+var character_atlas: Texture2D
+var moving := false
+var companion_moving := false
+var cast_remaining := 0.0
+var companion_cast_remaining := 0.0
+var companion_faces_left := false
+var hurt_remaining := 0.0
 
 func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	character_atlas = load(CharacterArt.ATLAS_PATH) as Texture2D
 	_bind_keys()
 	_build_menu()
 	sound = AudioStreamPlayer.new()
@@ -73,65 +82,13 @@ func _bind_keys() -> void:
 			InputMap.action_add_event(action, event)
 
 func _build_menu() -> void:
-	var layer := CanvasLayer.new()
-	add_child(layer)
-	menu_layer = Control.new()
-	menu_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	layer.add_child(menu_layer)
-	var shade := ColorRect.new()
-	shade.color = Color(0.05, 0.04, 0.12, 0.84)
-	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	menu_layer.add_child(shade)
-	var box := PanelContainer.new()
-	box.position = Vector2(230, 90)
-	box.size = Vector2(500, 360)
-	var style := StyleBoxFlat.new()
-	style.bg_color = INK
-	style.border_color = PINK
-	style.set_border_width_all(3)
-	style.set_corner_radius_all(12)
-	style.content_margin_left = 32
-	style.content_margin_right = 32
-	style.content_margin_top = 24
-	style.content_margin_bottom = 24
-	box.add_theme_stylebox_override("panel", style)
-	menu_layer.add_child(box)
-	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 14)
-	box.add_child(column)
-	heading = Label.new()
-	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	heading.add_theme_font_size_override("font_size", 34)
-	heading.add_theme_color_override("font_color", PINK)
-	column.add_child(heading)
-	description = Label.new()
-	description.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	description.custom_minimum_size = Vector2(430, 100)
-	description.add_theme_font_size_override("font_size", 18)
-	description.add_theme_color_override("font_color", CREAM)
-	column.add_child(description)
-	play_button = _button(column, "Jugar", _on_play)
-	menu_button = _button(column, "Volver al inicio", func(): show_overlay("menu"))
-	quit_button = _button(column, "Salir", func(): get_tree().quit())
-
-func _button(parent: Node, label: String, callback: Callable) -> Button:
-	var button := Button.new()
-	button.text = label
-	button.custom_minimum_size.y = 42
-	button.add_theme_font_size_override("font_size", 19)
-	var normal := StyleBoxFlat.new()
-	normal.bg_color = Color("413052")
-	normal.set_corner_radius_all(5)
-	var hover := normal.duplicate() as StyleBoxFlat
-	hover.bg_color = Color("725073")
-	button.add_theme_stylebox_override("normal", normal)
-	button.add_theme_stylebox_override("hover", hover)
-	button.add_theme_stylebox_override("focus", hover)
-	button.add_theme_color_override("font_color", CREAM)
-	button.pressed.connect(callback)
-	parent.add_child(button)
-	return button
+	var widgets: Dictionary = Interface.build_menu(self)
+	menu_layer = widgets["menu_layer"]
+	heading = widgets["heading"]
+	description = widgets["description"]
+	play_button = widgets["play_button"]
+	menu_button = widgets["menu_button"]
+	quit_button = widgets["quit_button"]
 
 func show_overlay(next_mode: String) -> void:
 	mode = next_mode
@@ -154,6 +111,8 @@ func show_overlay(next_mode: String) -> void:
 			heading.text = "¡Lo lograron!"
 			description.text = "Giovanny está a salvo.\nVivi y Wiky vuelven a casa con él.\n\nPara Vivi, con mucho cariño. ♡\nTiempo: %d:%02d" % [int(run_time) / 60, int(run_time) % 60]
 			play_button.text = "Volver a jugar  [Enter]"
+	for portrait in menu_layer.find_children("CharacterPortrait*", "TextureRect", true, false):
+		portrait.texture = CharacterArt.portrait(character_atlas, portrait.get_meta("character_row"), mode == "won")
 	play_button.grab_focus()
 	queue_redraw()
 
@@ -173,6 +132,11 @@ func load_stage(index: int) -> void:
 	player = Vector2(108, 310)
 	companion = Vector2(72, 352)
 	facing = Vector2.RIGHT
+	moving = false
+	companion_moving = false
+	cast_remaining = 0.0
+	companion_cast_remaining = 0.0
+	hurt_remaining = 0.0
 	hp = MAX_HP
 	invincible = 1.0
 	attack_cooldown = 0.0
@@ -250,11 +214,18 @@ func _physics_process(delta: float) -> void:
 	companion_cooldown = maxf(0.0, companion_cooldown - delta)
 	pulse = maxf(0.0, pulse - delta)
 	toast_time = maxf(0.0, toast_time - delta)
+	cast_remaining = maxf(0.0, cast_remaining - delta)
+	companion_cast_remaining = maxf(0.0, companion_cast_remaining - delta)
+	hurt_remaining = maxf(0.0, hurt_remaining - delta)
 	var direction := Input.get_vector("walk_left", "walk_right", "walk_up", "walk_down")
+	moving = direction.length_squared() > 0.0
 	if direction.length_squared() > 0.0:
 		facing = direction
 		player = move_actor(player, direction * SPEED * delta, 14.0)
 	var follow := player - facing * 48.0 + Vector2(0, 18)
+	companion_moving = companion.distance_to(follow) > 4.0
+	if absf(follow.x - companion.x) > 2.0:
+		companion_faces_left = follow.x < companion.x
 	companion = companion.move_toward(follow, 180.0 * delta)
 	if Input.is_action_pressed("shoot"):
 		shoot()
@@ -292,6 +263,7 @@ func shoot() -> void:
 	if attack_cooldown > 0.0 or mode != "playing":
 		return
 	attack_cooldown = 0.25
+	cast_remaining = 0.17
 	var direction := facing
 	var closest := 600.0
 	for enemy in enemies:
@@ -313,13 +285,14 @@ func call_companion() -> void:
 		_notify("Wiky está descansando. Espera %d s." % ceili(companion_cooldown))
 		return
 	companion_cooldown = 5.0
+	companion_cast_remaining = 0.5
 	pulse = 0.45
 	for enemy in enemies:
 		if player.distance_to(enemy["pos"]) < 175.0:
 			_damage_enemy(enemy, 3)
 	_remove_dead_enemies()
 	_tone(350, 0.14)
-	_notify("¡Wiky usa Arañazo Ponzoñoso!")
+	_notify("¡Wiky libera su magia digital!")
 
 func _update_enemies(delta: float) -> void:
 	for enemy in enemies:
@@ -392,6 +365,7 @@ func take_damage() -> void:
 		return
 	hp -= 1
 	invincible = 1.1
+	hurt_remaining = 0.4
 	_burst(player, Color("ff626e"))
 	_tone(140, 0.12)
 	if hp <= 0:
@@ -441,96 +415,52 @@ func _tone(frequency: float, duration: float) -> void:
 	sound.play()
 
 func _draw() -> void:
-	_draw_world()
+	Scenery.draw_world(self, stage, time, obstacles, gate_open())
 	for heart in hearts:
-		_text(heart + Vector2(-9, 6), "♥", PINK, 26)
+		Effects.heart(self, heart, 2.5)
 	if not bell_collected:
 		_draw_bell(bell_position + Vector2(0, sin(time * 4) * 3))
 	if stage == 2:
-		_sprite(GIOVANNY, Vector2(824, 230), 0.85)
+		CharacterArt.draw_character(self, character_atlas, 2, Vector2(824, 245), 90)
 		if not boss_defeated:
 			for i in range(5):
-				draw_line(Vector2(790 + i * 17, 165), Vector2(790 + i * 17, 242), Color("9b85ca"), 4)
-			draw_rect(Rect2(783, 163, 82, 82), Color("bba7e6"), false, 3)
+				draw_rect(Rect2(782 + i * 19, 150, 3, 99), Color("87739e"))
+				draw_rect(Rect2(778 + i * 19, 150, 1, 99), Color("cfb9e4"))
+			draw_rect(Rect2(773, 148, 94, 4), Color("c0a7d4"))
+			draw_rect(Rect2(773, 246, 94, 4), Color("5a436e"))
 		elif player.distance_to(Vector2(824, 230)) < 85:
-			_text(Vector2(738, 155), "[E] Rescatar", CREAM, 21)
+			_text(Vector2(747, 140), "[E] RESCATAR", CREAM, 18)
 	for enemy in enemies:
 		var point: Vector2 = enemy["pos"]
 		if enemy["boss"]:
-			_sprite(MALIKETH, point, 1.35, Color.WHITE if enemy["flash"] <= 0 else PINK)
+			var frame := 4 if enemy["flash"] > 0 else (3 if enemy["timer"] > 1.4 else (1 + int(time * 5) % 2))
+			CharacterArt.draw_character(self, character_atlas, 3, point, 88, frame, true,
+				Color.WHITE if enemy["flash"] <= 0 else PINK)
 			if not bell_collected:
-				draw_arc(point - Vector2(0, 25), 48, 0, TAU, 32, Color("b299eb"), 3)
+				Effects.lunar_shield(self, point - Vector2(0, 32), time)
 		else:
 			_draw_pelusa(point, enemy["flash"] > 0)
 	for shot in shots:
-		draw_circle(shot["pos"], 6, CREAM)
-		draw_circle(shot["pos"], 3, PINK)
+		Effects.pink_magic(self, shot["pos"], shot["vel"], time)
 	for hazard in hazards:
-		draw_circle(hazard["pos"], 10, Color("753258"))
-		draw_circle(hazard["pos"], 6, Color("ff677c"))
-	_sprite(WIKY, companion, 0.7)
+		Effects.lunar_magic(self, hazard["pos"], hazard["vel"], time)
+	var walk_frame := 1 + int(time * 7) % 2
+	var wiky_frame := 3 if companion_cast_remaining > 0 else (walk_frame if companion_moving else 0)
+	CharacterArt.draw_character(self, character_atlas, 1, companion, 68, wiky_frame, companion_faces_left)
 	if invincible <= 0 or int(time * 15) % 2 == 0:
-		_sprite(VIVI, player, 0.85)
+		var frame := 4 if hurt_remaining > 0 else (3 if cast_remaining > 0 else (walk_frame if moving else 0))
+		CharacterArt.draw_character(self, character_atlas, 0, player, 92, frame, facing.x < -0.1)
 	if pulse > 0:
-		draw_arc(player, 175 * (1 - pulse / 0.45), 0, TAU, 48, Color(0.6, 0.9, 1, pulse / 0.45), 5)
+		Effects.digital_pulse(self, player, 1 - pulse / 0.45)
 	for effect in particles:
-		draw_rect(Rect2(effect["pos"], Vector2(4, 4)), effect["color"])
-	_draw_hud()
-
-func _draw_world() -> void:
-	var dark := stage == 2
-	draw_rect(Rect2(Vector2.ZERO, SIZE), INK)
-	draw_rect(Rect2(0, 106, 960, 396), Color("342a4e") if dark else Color("376c54"))
-	var ground := Color("51425f") if dark else (Color("527969") if stage == 1 else Color("78aa6b"))
-	draw_rect(FIELD, ground)
-	for y in range(136, 478, 24):
-		for x in range(52, 918, 24):
-			var value := (x * 13 + y * 7) % 11
-			if value < 5:
-				draw_rect(Rect2(x, y, 3, 5), ground.lightened(0.09))
-				if not dark:
-					draw_line(Vector2(x, y + 5), Vector2(x + 4, y + 1), ground.darkened(0.1), 2)
-	var path_color := Color("716077") if dark else Color("d4b78d")
-	draw_rect(Rect2(44, 286, 868, 56), path_color)
-	for i in range(32):
-		draw_rect(Rect2(58 + i * 27, 299 + (i % 3) * 11, 6, 3), path_color.darkened(0.08))
-	if dark:
-		for x in range(80, 930, 120):
-			draw_rect(Rect2(x, 108, 36, 39), Color("302339"))
-			draw_rect(Rect2(x, 443, 36, 55), Color("302339"))
-			draw_rect(Rect2(x + 7, 114, 6, 20), Color("766581"))
-			draw_rect(Rect2(x + 7, 450, 6, 20), Color("766581"))
-		_text(Vector2(791, 145), "Giovanny", CREAM, 18)
-	else:
-		for i in range(10):
-			_draw_tree(Vector2(35 + i * 100, 137))
-			_draw_tree(Vector2(15 + i * 104, 508))
-		for i in range(24):
-			var x := 68 + (i * 173) % 820
-			var y := 167 + (i * 97) % 286
-			var col := PINK if i % 2 == 0 else Color("fbe395")
-			draw_rect(Rect2(x, y, 5, 5), col)
-			draw_rect(Rect2(x + 1, y + 5, 2, 5), Color("416846"))
-	for obstacle in obstacles:
-		draw_rect(obstacle.grow(4), Color(0.08, 0.17, 0.16, 0.3))
-		draw_rect(obstacle, Color("517f94") if stage == 0 else Color("413d55"))
-		draw_rect(Rect2(obstacle.position + Vector2(8, 10), obstacle.size - Vector2(16, 20)), Color("74abb0") if stage == 0 else Color("5b536c"))
-	if stage < 2:
-		var color := Color("eac577") if gate_open() else Color("6e5875")
-		draw_rect(Rect2(856, 254, 57, 116), INK)
-		draw_rect(Rect2(862, 260, 45, 104), color)
-		if gate_open():
-			_text(Vector2(871, 318), "➜", INK, 30)
-			_text(Vector2(787, 240), "¡Siguiente!", CREAM, 19)
-		else:
-			for y in range(270, 357, 17):
-				draw_line(Vector2(862, y), Vector2(907, y), INK, 3)
-
-func _draw_tree(point: Vector2) -> void:
-	draw_rect(Rect2(point - Vector2(5, 31), Vector2(10, 35)), Color("76543e"))
-	draw_rect(Rect2(point - Vector2(28, 54), Vector2(56, 30)), Color("284e45"))
-	draw_rect(Rect2(point - Vector2(23, 68), Vector2(46, 30)), Color("376b51"))
-	draw_rect(Rect2(point - Vector2(14, 77), Vector2(28, 20)), Color("559266"))
+		Effects.sparkle(self, effect["pos"].round(), effect["color"], 1)
+	Interface.draw_hud(self, {
+		"stage": stage, "hp": hp, "max_hp": MAX_HP,
+		"bell_collected": bell_collected, "boss_defeated": boss_defeated,
+		"enemies": enemies.size(), "boss_hp": enemies[0]["hp"] if stage == 2 and not enemies.is_empty() else 0,
+		"companion_cooldown": companion_cooldown, "run_time": run_time,
+		"toast": toast, "toast_time": toast_time, "muted": muted
+	})
 
 func _draw_bell(point: Vector2) -> void:
 	draw_circle(point, 25 + sin(time * 3) * 2, Color(1, 0.85, 0.4, 0.13))
@@ -540,49 +470,7 @@ func _draw_bell(point: Vector2) -> void:
 	draw_circle(point + Vector2(0, 15), 4, Color("b98549"))
 
 func _draw_pelusa(point: Vector2, flash: bool) -> void:
-	draw_ellipse_shadow(point, 21)
-	var color := PINK if flash else Color("634969")
-	draw_rect(Rect2(point - Vector2(20, 31), Vector2(40, 29)), color)
-	draw_rect(Rect2(point - Vector2(13, 39), Vector2(26, 38)), color)
-	draw_rect(Rect2(point - Vector2(11, 26), Vector2(6, 6)), Color("ffe39f"))
-	draw_rect(Rect2(point + Vector2(5, -26), Vector2(6, 6)), Color("ffe39f"))
-	draw_rect(Rect2(point - Vector2(5, 13), Vector2(10, 3)), INK)
-
-func draw_ellipse_shadow(point: Vector2, radius: float) -> void:
-	draw_set_transform(point, 0, Vector2(1, 0.3))
-	draw_circle(Vector2.ZERO, radius, Color(0.06, 0.05, 0.12, 0.28))
-	draw_set_transform(Vector2.ZERO)
-
-func _sprite(texture: Texture2D, feet: Vector2, scale_value: float, tint: Color = Color.WHITE) -> void:
-	var sprite_size := texture.get_size() * scale_value
-	draw_ellipse_shadow(feet, sprite_size.x * 0.33)
-	draw_texture_rect(texture, Rect2(feet - Vector2(sprite_size.x / 2, sprite_size.y), sprite_size), false, tint)
-
-func _draw_hud() -> void:
-	draw_rect(Rect2(0, 0, 960, 104), INK)
-	_text(Vector2(28, 37), "SORPRESA VIVI’S", PINK, 25)
-	_text(Vector2(28, 65), "%d / 3   %s" % [stage + 1, ZONES[stage]], CREAM, 19)
-	var objective := "Cascabel: %s   ·   Pelusas: %d   ·   Salida a la derecha" % ["✓" if bell_collected else "pendiente", enemies.size()]
-	if stage == 2:
-		objective = "Acércate a Giovanny y pulsa E" if boss_defeated else ("Derrota a Maliketh" if bell_collected else "Recoge el cascabel dorado para romper el escudo")
-	_text(Vector2(28, 91), objective, Color("c6bcdb"), 17)
-	_text(Vector2(623, 36), "VIDA", CREAM, 15)
-	for i in range(MAX_HP):
-		_text(Vector2(681 + i * 34, 41), "♥", PINK if i < hp else Color("54475f"), 28)
-	var help_text := "E  Wiky: listo" if companion_cooldown <= 0 else "E  Wiky: %d s" % ceili(companion_cooldown)
-	_text(Vector2(623, 67), help_text, Color("a7e9e3"), 18)
-	_text(Vector2(823, 89), "%d:%02d" % [int(run_time) / 60, int(run_time) % 60], CREAM, 18)
-	if stage == 2 and not enemies.is_empty():
-		draw_rect(Rect2(330, 112, 300, 8), Color("32223e"))
-		draw_rect(Rect2(330, 112, 300 * maxf(0, enemies[0]["hp"]) / 30.0, 8), PINK)
-	if toast_time > 0:
-		draw_rect(Rect2(115, 452, 730, 30), Color(0.09, 0.08, 0.17, 0.92))
-		var font := ThemeDB.fallback_font
-		var width := font.get_string_size(toast, HORIZONTAL_ALIGNMENT_LEFT, -1, 17).x
-		_text(Vector2((960 - width) / 2, 473), toast, CREAM, 17)
-	draw_rect(Rect2(0, 504, 960, 36), INK)
-	_text(Vector2(28, 528), "WASD / flechas  Mover      Espacio  Disparar      E  Wiky      Esc  Pausa", CREAM, 16)
-	_text(Vector2(813, 528), "M  " + ("Sin sonido" if muted else "Sonido"), Color("c6bcdb"), 15)
+	Effects.pelusa(self, point, flash, time)
 
 func _text(point: Vector2, value: String, color: Color, font_size: int) -> void:
-	draw_string(ThemeDB.fallback_font, point, value, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, color)
+	draw_string(PIXEL_FONT, point, value, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, color)
