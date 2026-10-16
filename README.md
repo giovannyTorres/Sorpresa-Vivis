@@ -94,7 +94,7 @@ build/native/linux/Sorpresa-Vivis --smoke-test
 build/native/linux/Sorpresa-Vivis --capture /tmp/vivis-preview
 ```
 
-Validación de esta versión: **63 escenarios** del modelo pasan, también con ASAN, UBSAN e iteradores de depuración; **400 mapas** conectados, **1,008 combinaciones de cruce de puertas** y **100 finales** con churu garantizado. La auditoría de accesibilidad y guardado cubrió **3,800 habitaciones**. La prueba de interfaz de la versión 0.4.0 pasó **46 comprobaciones**, incluidas cinco reaperturas y conservación exacta del perfil. Windows se comprobó con Wine 10.
+Validación de esta versión: **63 escenarios** del modelo pasan, también con ASAN, UBSAN e iteradores de depuración; **400 mapas** conectados, **1,008 combinaciones de cruce de puertas** y **100 finales** con churu garantizado. La auditoría de accesibilidad y guardado cubrió **3,800 habitaciones**. La prueba de interfaz de la versión 0.4.0 pasó **46 comprobaciones**, incluidas cinco reaperturas y conservación exacta del perfil. La versión 0.4.1 superó además **88 cruces reales** con teclado, en las cuatro direcciones, con entradas descentradas, caminando y esquivando, sin E. Windows se comprobó con Wine 10.
 
 El segundo comando captura veinte escenas y termina automáticamente. La entrada de mando está implementada; la validación en este entorno no incluye un mando físico.
 
