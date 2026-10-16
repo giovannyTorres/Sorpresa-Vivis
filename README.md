@@ -1,49 +1,74 @@
-# Sorpresa Vivi’s
+# Sorpresa Vivis
 
-Juego **2D para PC**, corto y directo. Vivi y Wiky atraviesan la Pradera de Bigotes y el Sendero del Umbral, derrotan a Maliketh y rescatan a Giovanny.
+**Aventura 2D para PC — versión nativa 0.3.0 en C++17 y raylib.**
+
+Vivi y Wiky atraviesan la Pradera de Bigotes y el Sendero del Umbral para derrotar a Maliketh y rescatar a Giovanny. Tres escenarios, magia de corazones, una gata lunar y un final completo.
 
 ## Jugar
 
-**Windows 10/11, 64 bits:** descomprime `Sorpresa-Vivis-Windows.zip` y abre `Sorpresa-Vivis.exe`. No necesitas instalar Godot, Python ni conexión a Internet.
+**Windows 10/11 de 64 bits:** descomprime `Sorpresa-Vivis-Native-Windows.zip` y abre **Sorpresa-Vivis.exe**. El arte, fuentes y sonido están integrados en ese ejecutable. No necesita instalar Godot, Python, raylib ni descargar archivos al jugar.
 
-**Linux, 64 bits:** descomprime `Sorpresa-Vivis-Linux.zip` y ejecuta `./Sorpresa-Vivis.x86_64`. Si hace falta, usa `chmod +x Sorpresa-Vivis.x86_64`.
+**Linux de 64 bits:** descomprime `Sorpresa-Vivis-Native-Linux.zip`, da permiso con `chmod +x Sorpresa-Vivis` si hace falta y abre `./Sorpresa-Vivis`. Requiere un escritorio X11, OpenGL 3.3 y glibc 2.38 o posterior.
 
-| Tecla | Acción |
-| --- | --- |
-| WASD o flechas | Mover a Vivi |
-| Espacio, mantener pulsado | Disparar al enemigo más cercano |
-| E o Enter | Magia digital de Wiky; cerca de Giovanny, rescatarlo |
-| Esc | Pausar o continuar |
-| R en derrota | Repetir el lugar actual |
-| M | Activar/desactivar sonido |
-| F11 | Pantalla completa |
+El juego funciona sin conexión. Los menús aceptan ratón, teclado y mando. Puedes cambiar el volumen, pantalla completa, movimiento reducido y modo tranquilo dentro de **Ajustes**.
 
-Recoge el cascabel y elimina las pelusas de cada lugar para abrir la salida de la derecha. En la torre, recoge el último cascabel para romper el escudo de Maliketh. Cuando caiga, acércate a Giovanny y pulsa E.
+| Acción | Teclado | Mando |
+| --- | --- | --- |
+| Mover | WASD / flechas | Stick izquierdo / cruceta |
+| Magia de corazones | Espacio, mantener | A / botón inferior, mantener |
+| Magia de Wiky / rescatar | E o Enter | X / botón izquierdo |
+| Esquivar | Mayús o L | B / botón derecho |
+| Pausa | Esc | Start |
+| Reintentar tras derrota | R o botón del menú | A |
+| Pantalla completa | F11 | Ajustes |
+| Activar/desactivar sonido | M | Ajustes |
 
-Wiky te sigue y su ataque alcanza a los enemigos cercanos; recarga en 5 segundos. Los corazones recuperan vida. Al pasar de lugar recuperas toda la vida. Si pierdes puedes repetir ese lugar. La partida se pausa al cambiar de ventana. No hay guardado entre sesiones.
+La magia apunta al enemigo visible más cercano. Recoge el cascabel y despeja cada lugar para abrir la salida de la derecha. En la torre, el cascabel rompe el escudo de Maliketh. Cuando se rinda, acércate a Giovanny y pulsa E. La esquiva protege durante un instante y recarga en 2 segundos; Wiky alcanza a los enemigos cercanos y recarga en 5. Los corazones recuperan vida.
 
-## Abrir el proyecto
+## Tu progreso
 
-Usa **Godot 4.6.3** e importa `godot_game/project.godot`. Pulsa F5 para jugar. Usa OpenGL de compatibilidad y no necesita plugins.
+La partida guarda automáticamente **el inicio de cada zona**. Al volver, **Continuar** te deja en esa zona con la vida restaurada; no conserva los enemigos eliminados dentro de ella. Si pierdes, puedes repetir la misma zona. Los ajustes también se guardan. Al completar el rescate se cierra esa partida y puedes comenzar otra.
 
-La versión jugable está en `godot_game/playable/`. `legacy_web/`, los módulos anteriores de Godot y `sorpresa-vivis-(4.2)/` quedan como referencia; la escena de inicio ahora es la aventura completa.
+En Windows el perfil está en `%LOCALAPPDATA%/SorpresaVivis/profile.txt`. En Linux está en `$XDG_DATA_HOME/sorpresa-vivis/` o `~/.local/share/sorpresa-vivis/`. Se conserva una copia del perfil anterior para recuperar un guardado dañado.
 
-## Diseño visual
+## Personajes y dirección visual
 
-Los personajes siguen la referencia visual aportada para Sorpresa Vivis: Vivi lleva lentes, cabello castaño y sudadera rosa; Wiky es un gato blanco y negro de ojos amarillos; Giovanny lleva lentes, barba, ropa verde y mochila; Maliketh es una gata siamesa de ojos azules, pañuelo violeta y dije lunar.
+Los diseños siguen la referencia aportada: Vivi con lentes, cabello castaño y sudadera rosa; Wiky como gato blanco y negro de ojos amarillos; Giovanny con lentes, barba, mochila y ropa verde; Maliketh como gata siamesa de ojos azules, pañuelo violeta y dije lunar. La galería permite ver sus animaciones, personalidad y magia.
 
-Los atlas transparentes conservan el arte generado a partir de esa referencia, con reposo, dos pasos de movimiento, magia, daño, victoria y retratos. Sus regiones y pivotes se definen en `playable/pixel_characters.gd` para alinear las poses al suelo. Los escenarios tienen árboles, agua, ruinas y arquitectura lunar; los efectos usan corazones rosas, cubos azules y magia violeta. El menú presenta los cuatro personajes con sus colores y marcos pixelados. La tipografía Pixelify Sans se distribuye con su licencia OFL en `playable/assets/OFL.txt` y en los ZIP.
+Hay poses de reposo, movimiento, magia, daño y victoria, retratos, una nueva ilustración de portada e icono propio. Los escenarios incorporan vegetación, agua, ruinas, ventanas lunares, antorchas y profundidad. El combate añade destellos, estelas, aviso del ataque de Maliketh y feedback de daño; movimiento reducido atenúa esos efectos.
 
-![Menú con los retratos de los cuatro personajes](docs/previews/menu.png)
+![Portada de la versión nativa](docs/previews/native-menu.png)
 
-![Vivi y Wiky usando su magia en la pradera](docs/previews/combate.png)
+![Magia y combate en la versión nativa](docs/previews/native-combate.png)
 
-## Verificación y exportación
+## Compilar y verificar
+
+La versión principal está en **`native_game/`**. El proyecto Godot y el prototipo web se conservan como referencia; el ejecutable nativo no depende de ellos. Sus atlas y la fuente se comparten desde `godot_game/playable/assets/` durante la compilación.
+
+En Linux x86-64, con Python 3.9+, g++, `dpkg-deb` y las bibliotecas de escritorio X11/OpenGL:
 
 ```bash
-godot --headless --path godot_game --editor --import --quit
-godot --headless --path godot_game --script res://tests/playthrough.gd
-bash scripts/build_pc.sh
+python3 scripts/build_native.py --bootstrap --platform all --test
 ```
 
-Instala las plantillas de exportación **4.6.3** desde Godot antes de compilar. El script crea ejecutables con los recursos integrados y ZIP para Windows y Linux en `dist/`. La prueba de integración comprueba movimiento, colisiones, pausa, daño, curación, transiciones, habilidad de Wiky, jefe, rescate y reintento; termina con código distinto de cero si falla.
+La primera compilación descarga raylib 5.5 y, si falta, un compilador MinGW portable para Windows. Las descargas están fijadas por versión y SHA256. No instala paquetes del sistema ni requiere permisos de administrador. Para las siguientes compilaciones sin red:
+
+```bash
+python3 scripts/build_native.py --platform all --test
+```
+
+Los binarios quedan en `build/native/{windows,linux}/` y los ZIP con instrucciones y licencias en `dist/`. Puedes compilar solo una plataforma con `--platform windows` o `--platform linux`. La dependencia portable de MinGW necesita un host Linux compatible con Debian 13; consulta las variables de override y licencias en [THIRD_PARTY.md](native_game/THIRD_PARTY.md).
+
+Las **46 pruebas** comprueban movimiento, colisiones, esquiva, combate, pausa, derrota, curación, checkpoints, escudo, rescate, un recorrido completo y recuperación del perfil. Se revisaron las diez pantallas de la aplicación en Linux y se ejecutó el binario Windows con Wine 10, incluyendo captura de esas pantallas. La entrada de mando está implementada; no se probó con un dispositivo físico en este entorno. Para probar el arranque gráfico en un escritorio:
+
+```bash
+build/native/linux/Sorpresa-Vivis --smoke-test
+```
+
+Para capturar las diez pantallas principales y cerrar automáticamente:
+
+```bash
+build/native/linux/Sorpresa-Vivis --capture /tmp/vivis-preview
+```
+
+Pixelify Sans se distribuye con su licencia OFL. Raylib y su licencia acompañan cada ZIP. El mapa de archivos de la implementación es: `game.cpp` (reglas), `main.cpp` (ventana, entrada y sonido), `profile.cpp` (guardado), `characters.cpp` (sprites y magia), `world.cpp` (escenarios) e `interface.cpp` (menús y HUD).
