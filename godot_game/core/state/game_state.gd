@@ -99,7 +99,7 @@ func get_chapter_flow(chapter_id: String) -> Dictionary:
 
 func get_objective_text(chapter_id: String, objective_id: String) -> String:
 	_ensure_chapter_data()
-	var chapter_objectives := _chapter_objectives.get(chapter_id, {})
+	var chapter_objectives: Dictionary = _chapter_objectives.get(chapter_id, {})
 	return str(chapter_objectives.get(objective_id, ""))
 
 func set_objective_by_id(chapter_id: String, objective_id: String) -> void:
