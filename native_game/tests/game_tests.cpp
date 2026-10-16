@@ -12,7 +12,7 @@
 
 using namespace vivis;
 namespace {
-int passed{},failed{},floorsChecked{};
+int passed{},failed{},floorsChecked{},doorCases{};
 void expect(bool value,const std::string& message) { if(!value)throw std::runtime_error(message); }
 void near(float value,float wanted,float tolerance,const std::string& message) {
     expect(std::fabs(value-wanted)<=tolerance,message+" ("+std::to_string(value)+" vs "+std::to_string(wanted)+")");
@@ -37,6 +37,29 @@ Game arena() {
 }
 Enemy foe(Vector2 position,float hp=20,EnemyKind kind=EnemyKind::Fluff) {
     Enemy e;e.pos=position;e.hp=e.maxHp=hp;e.kind=kind;e.timer=100;return e;
+}
+constexpr Vector2 outward[]={{0,-1},{1,0},{0,1},{-1,0}};
+float perpendicular(Vector2 p,int direction) {return direction%2?p.y-405:p.x-640;}
+Vector2 approach(int direction,float offset,float depth) {
+    Vector2 p;
+    if(direction==0)p={640,Field.y+depth};
+    else if(direction==1)p={Field.x+Field.width-depth,405};
+    else if(direction==2)p={640,Field.y+Field.height-depth};
+    else p={Field.x+depth,405};
+    if(direction%2)p.y+=offset;else p.x+=offset;return p;
+}
+Game corridor(int direction,float offset=0,float depth=120) {
+    Game g=arena();g.rooms.assign(2,Room{});g.currentRoom=0;
+    g.rooms[0].kind=RoomKind::Start;g.rooms[1].kind=RoomKind::Combat;
+    g.rooms[0].neighbors[direction]=1;g.rooms[1].neighbors[(direction+2)%4]=0;
+    g.rooms[1].x=int(outward[direction].x);g.rooms[1].y=int(outward[direction].y);
+    for(auto& room:g.rooms){room.cleared=true;room.rewardGenerated=true;room.rewardClaimed=true;}
+    g.enterRoom(0);g.player=approach(direction,offset,depth);g.invincible=1000;
+    g.doorCooldown=0;g.wiskyShotCooldown=1000;g.digitalShotCooldown=1000;g.cues.clear();return g;
+}
+float frameDelta(int style,int frame) {
+    constexpr float variable[]={1.f/144,1.f/38,1.f/75,1.f/24,.047f,1.f/90};
+    return style==0?1.f/30:style==1?1.f/60:style==2?1.f/120:variable[frame%6];
 }
 void finish(Game& g) {for(auto& e:g.enemies)g.damageEnemy(e,e.maxHp+1);g.removeDefeated();}
 std::string layout(const Game& g) {
@@ -67,9 +90,12 @@ void auditFloor(const Game& g) {
             expect(next<int(g.rooms.size())&&next!=i,"invalid neighbor");const auto& other=g.rooms[next];
             expect(other.neighbors[(d+2)%4]==i,"nonreciprocal door");
             expect(other.x==r.x+dx[d]&&other.y==r.y+dy[d],"door joins nonadjacent rooms");}
-        for(const auto& e:r.enemies){expect(e.hp>0&&e.hp<=e.maxHp&&std::isfinite(e.hp),"invalid generated health");
+        std::set<EnemyKind> enemyKinds;
+        for(const auto& e:r.enemies){enemyKinds.insert(e.kind);expect(e.hp>0&&e.hp<=e.maxHp&&std::isfinite(e.hp),"invalid generated health");
             expect(inside(e.pos,grow(Field,-20)),"enemy outside field");
-            for(auto prop:r.obstacles)expect(!inside(e.pos,grow(prop,20)),"enemy spawned inside prop");}}
+            for(auto prop:r.obstacles)expect(!inside(e.pos,grow(prop,20)),"enemy spawned inside prop");}
+        if(r.kind==RoomKind::Combat||r.kind==RoomKind::Challenge)
+            expect(enemyKinds.size()>=std::min<std::size_t>(r.enemies.size(),6),"generated encounter repeats types instead of providing variety");}
     for(auto kind:{RoomKind::Start,RoomKind::Boss,RoomKind::Treasure,RoomKind::Shop,RoomKind::Sanctuary})
         expect(kinds[int(kind)]==1,"missing or duplicated special room");
     const auto& boss=g.rooms[roomOf(g,RoomKind::Boss)];
@@ -158,6 +184,55 @@ int main() {
         Game g;g.newGame(51);int d=directionOf(g),next=g.room().neighbors[d];g.doorCooldown=0;
         constexpr Vector2 edges[]={{640,179},{1197,405},{640,633},{83,405}},directions[]={{0,-1},{1,0},{0,1},{-1,0}};
         g.player=edges[d];g.update(1.f/60,{directions[d].x,directions[d].y});expect(g.currentRoom==next,"frame input failed door travel");
+    });
+    scenario("door traversal works across all directions FPS speeds offsets diagonals and dashes without interaction",[]{
+        for(int d=0;d<4;++d)for(int style=0;style<4;++style)for(float speed:{270.f,295.f,420.f})
+        for(float offset:{0.f,-30.f,30.f,-45.f,45.f,-60.f,60.f})for(int mode=0;mode<3;++mode){
+            Game g=corridor(d,offset,mode==1?52.f:120.f);g.stats.speed=speed;
+            Vector2 input=outward[d];
+            if(mode==1){float tangent=offset>0?-1.f:1.f;if(d%2)input.y=tangent;else input.x=tangent;}
+            int frame=0;float elapsed=0;
+            while(g.currentRoom==0&&elapsed<4){float dt=frameDelta(style,frame);
+                g.update(dt,{input.x,input.y,false,false,mode==2&&frame==0});elapsed+=dt;++frame;}
+            std::string which="dir="+std::to_string(d)+" FPSstyle="+std::to_string(style)+" speed="+std::to_string(speed)+
+                " offset="+std::to_string(offset)+" mode="+std::to_string(mode)+" pos=("+std::to_string(g.player.x)+","+std::to_string(g.player.y)+")";
+            expect(g.currentRoom==1,"door stuck: "+which);
+            expect(std::fabs(perpendicular(g.player,d))<=30.01f,"entry left assisted doorway lane: "+which);
+            if(mode!=1&&std::fabs(offset)<=30)near(perpendicular(g.player,d),offset,.05f,"entry snapped perpendicular position: "+which);
+            expect(g.walkable(g.player)&&g.walkable(g.companion,12)&&g.walkable(g.digitalCompanion,12),"entry spawned an actor outside the room: "+which);
+            for(float hold=0;hold<.24f;){float dt=frameDelta(style,frame++);g.update(dt,{input.x,input.y});hold+=dt;}
+            expect(g.currentRoom==1,"held movement bounced back through entry: "+which);
+            expect(std::count(g.cues.begin(),g.cues.end(),Cue::Transition)==1,"one doorway generated repeated transitions: "+which);
+            ++doorCases;
+        }
+    });
+    scenario("north door no longer stalls at y180 under ordinary 60 FPS walking",[]{
+        Game g;g.newGame(51);g.enterRoom(0);g.room().cleared=true;g.enemies.clear();g.obstacles.clear();g.loot.clear();
+        g.player=RoomCenter;g.doorCooldown=0;int target=g.room().neighbors[0];expect(target>=0,"repro seed changed north topology");
+        for(int frame=0;frame<240&&g.currentRoom==0;++frame)g.update(1.f/60,{0,-1});
+        expect(g.currentRoom==target,"original seed51 y180 deadlock returned");
+    });
+    scenario("door guide ignores parallel movement and actors far outside the opening",[]{
+        for(int d=0;d<4;++d){Game parallel=corridor(d,0,30);Vector2 input=d%2?Vector2{0,1}:Vector2{1,0};
+            for(int n=0;n<120;++n)parallel.update(1.f/60,{input.x,input.y});
+            expect(parallel.currentRoom==0,"parallel movement was sucked through a door");
+            Game outside=corridor(d,120,100);frames(outside,240,{outward[d].x,outward[d].y});
+            expect(outside.currentRoom==0&&outside.walkable(outside.player),"wall outside opening became a door");
+            near(perpendicular(outside.player,d),120,.05f,"far-away actor was pulled toward doorway");}
+    });
+    scenario("closed combat doors and absent neighbors stay solid at all four edges",[]{
+        for(int d=0;d<4;++d){Game closed=corridor(d,0,80);closed.enemies={foe(RoomCenter,100000)};
+            frames(closed,240,{outward[d].x,outward[d].y});expect(closed.currentRoom==0&&closed.walkable(closed.player),"combat lock allowed exit");
+            Game wall=corridor(d,0,80);wall.room().neighbors[d]=-1;frames(wall,240,{outward[d].x,outward[d].y});
+            expect(wall.currentRoom==0&&wall.walkable(wall.player),"absent neighboring room became an exit");}
+    });
+    scenario("door traversal preserves loot state and permits intentional return after cooldown",[]{
+        for(int d=0;d<4;++d){Game g=corridor(d,20,65);g.loot={{{450,405},PickupKind::Coin,3}};
+            for(int n=0;n<120&&g.currentRoom==0;++n)g.update(1.f/60,{outward[d].x,outward[d].y});
+            expect(g.currentRoom==1,"could not cross for return test");
+            frames(g,20);Vector2 reverse=mul(outward[d],-1);
+            for(int n=0;n<120&&g.currentRoom==1;++n)g.update(1.f/60,{reverse.x,reverse.y});
+            expect(g.currentRoom==0&&g.loot.size()==1&&g.loot[0].amount==3,"intentional return failed or room loot changed");}
     });
     scenario("cleared rooms and collected rewards do not respawn on return",[]{
         Game g;g.newGame(61);int combat=roomOf(g,RoomKind::Combat);g.enterRoom(combat);finish(g);
@@ -309,12 +384,44 @@ int main() {
         g.updateHazards(.016f);expect(g.screen==Screen::Playing&&g.hp==g.maxHp&&g.extraLives==0,"ground revival failed");
         expect(g.grounds.empty()&&g.hazards.empty(),"ground revival left hostile areas");
     });
-    scenario("all eight ordinary enemy types move or perform their distinct telegraphed attack",[]{
+    scenario("all eight enemy types actively accelerate move and complete telegraphed attacks",[]{
         for(int kind=0;kind<int(EnemyKind::PillowBoss);++kind){Game g=arena();g.player={250,550};
-            g.enemies={foe({900,300},100,EnemyKind(kind))};g.enemies[0].timer=0;Vector2 start=g.enemies[0].pos;
+            g.enemies={foe({900,300},100,EnemyKind(kind))};Vector2 start=g.enemies[0].pos;
+            g.updateEnemies(1.f/60);float firstSpeed=length(g.enemies[0].velocity);
+            expect(firstSpeed>0&&firstSpeed<50,"enemy failed to accelerate gradually: "+std::to_string(kind));
+            for(int n=1;n<60;++n)g.updateEnemies(1.f/60);
+            expect(distance(start,g.enemies[0].pos)>70&&length(g.enemies[0].velocity)>40,"ordinary enemy stood still during roaming: "+std::to_string(kind));
+            g.enemies[0].timer=0;
             for(int n=0;n<150;++n)g.updateEnemies(1.f/60);
-            expect(distance(start,g.enemies[0].pos)>10||!g.hazards.empty()||!g.grounds.empty(),"ordinary enemy never moved/attacked");
             expect(kind==0||g.enemies[0].phase>0,"nontrivial enemy never completed a warning/attack cycle");}
+    });
+    scenario("all enemy types route around a blocking prop without clipping or idle deadlocks",[]{
+        for(int kind=0;kind<int(EnemyKind::PillowBoss);++kind){Game g=arena();g.player={955,405};g.invincible=1000;
+            g.obstacles={{570,290,120,220}};g.enemies={foe({485,405},100000,EnemyKind(kind))};g.enemies[0].timer=.8f;
+            g.wiskyShotCooldown=g.digitalShotCooldown=1000;float traveled=0,idle=0,longestIdle=0,closest=distance(g.player,g.enemies[0].pos);
+            for(int n=0;n<900;++n){Vector2 previous=g.enemies[0].pos;g.update(1.f/60,{});const auto& enemy=g.enemies[0];
+                float step=distance(previous,enemy.pos);traveled+=step;closest=std::min(closest,distance(g.player,enemy.pos));
+                expect(g.walkable(enemy.pos,20),"enemy clipped blocking prop: "+std::to_string(kind));
+                if(step<.01f&&enemy.windup<=0&&enemy.cooldown<=0){idle+=1.f/60;longestIdle=std::max(longestIdle,idle);}else idle=0;
+            }
+            expect(traveled>400&&closest<300,"enemy never routed around prop into engagement range: "+std::to_string(kind));
+            expect(longestIdle<.75f,"enemy became stuck outside a warning/charge: "+std::to_string(kind));
+        }
+    });
+    scenario("steering separates overlapping enemies instead of keeping one visual pile",[]{
+        Game g=arena();g.player={200,405};g.enemies={foe({800,405}),foe({800,405}),foe({800,405})};
+        for(int n=0;n<180;++n)g.updateEnemies(1.f/60);
+        for(std::size_t a=0;a<g.enemies.size();++a)for(std::size_t b=a+1;b<g.enemies.size();++b)
+            expect(distance(g.enemies[a].pos,g.enemies[b].pos)>20,"overlapping enemies failed to separate");
+    });
+    scenario("ordinary enemy steering remains consistent across 30 60 and 120 FPS",[]{
+        Game a=arena(),b=arena(),c=arena();a.player=b.player=c.player={200,405};
+        a.enemies=b.enemies=c.enemies={foe({1000,550})};
+        for(int n=0;n<60;++n)a.updateEnemies(1.f/30);
+        for(int n=0;n<120;++n)b.updateEnemies(1.f/60);
+        for(int n=0;n<240;++n)c.updateEnemies(1.f/120);
+        near(distance(a.enemies[0].pos,b.enemies[0].pos),0,8,"30 FPS pursuit diverged");
+        near(distance(c.enemies[0].pos,b.enemies[0].pos),0,8,"120 FPS pursuit diverged");
     });
     scenario("poison lethal damage clears the room once and generates collectable rewards",[]{
         Game g;g.newGame(141);g.enterRoom(roomOf(g,RoomKind::Combat));g.enemies={foe({900,300},1)};
@@ -432,5 +539,5 @@ int main() {
         for(const auto& bytes:{std::string(2*1024*1024+1,'x'),std::string("VIVIS_PROFILE_V2\n3 1 .5 0 0 0 0\n"),std::string("VIVIS_PROFILE_V2\n1 0 .5 0 0 0 7\n")}){
             f.write(bytes);expect(!loadProfile(live,f.path)&&snapshot(live)==before,"unsafe legacy/oversized profile accepted");}
     });
-    std::cout<<"\n"<<passed<<" passed, "<<failed<<" failed; "<<floorsChecked<<" generated floors audited\n";return failed?1:0;
+    std::cout<<"\n"<<passed<<" passed, "<<failed<<" failed; "<<floorsChecked<<" generated floors and "<<doorCases<<" doorway combinations audited\n";return failed?1:0;
 }

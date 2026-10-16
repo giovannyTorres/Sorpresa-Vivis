@@ -10,6 +10,8 @@
 namespace vivis {
 constexpr int Width=1280, Height=720, FloorCount=4, MaxHp=6;
 constexpr Rectangle Field{64,160,1152,492};
+constexpr float DoorHalfWidth=50, DoorCaptureDepth=32, DoorApproachDepth=96,
+                DoorAssistHalfWidth=72, DoorTravelLane=30;
 constexpr Vector2 RoomCenter{640,405}, PortalPosition{640,245}, MalikethPosition{930,410}, RescuePosition{1090,290};
 enum class Screen { Title,Playing,Paused,Settings,Controls,Gallery,Lost,Won,Reward };
 enum class Cue { Shoot,Hit,Heal,Bell,Help,Dash,Win,Transition,Coin,Item,Poison,Revive,Churu };

@@ -27,6 +27,7 @@ ROOT = Path(__file__).resolve().parent.parent
 BUILD = ROOT / "build" / "native"
 DEFAULT_TOOLS = ROOT.parent / ".native-tools" if (ROOT.parent / ".native-tools").exists() else ROOT / ".native-tools"
 TOOLS = Path(os.environ.get("VIVIS_TOOL_ROOT", str(DEFAULT_TOOLS))).expanduser().resolve()
+GAME_VERSION = "0.4.1"
 RAYLIB_VERSION = "5.5"
 RELEASE = f"https://github.com/raysan5/raylib/releases/download/{RAYLIB_VERSION}"
 RAYLIB = {
@@ -210,8 +211,8 @@ def windows_resource(compiler: str, environment: dict[str, str]) -> list[str]:
     resource = generated / "game.rc"
     resource.write_text('1 ICON "' + str(ico).replace("\\", "/") + '"\n' + '''
 1 VERSIONINFO
- FILEVERSION 0,4,0,0
- PRODUCTVERSION 0,4,0,0
+ FILEVERSION @RESOURCE_VERSION@
+ PRODUCTVERSION @RESOURCE_VERSION@
  FILEFLAGSMASK 0x3fL
  FILEFLAGS 0x0L
  FILEOS 0x40004L
@@ -224,8 +225,8 @@ BEGIN
   BEGIN
    VALUE "FileDescription", "Sorpresa Vivis - Aventura 2D\\0"
    VALUE "ProductName", "Sorpresa Vivis\\0"
-   VALUE "FileVersion", "0.4.0\\0"
-   VALUE "ProductVersion", "0.4.0\\0"
+   VALUE "FileVersion", "@VERSION@\\0"
+   VALUE "ProductVersion", "@VERSION@\\0"
    VALUE "InternalName", "Sorpresa-Vivis\\0"
    VALUE "OriginalFilename", "Sorpresa-Vivis.exe\\0"
   END
@@ -235,7 +236,7 @@ BEGIN
   VALUE "Translation", 0x0409, 1200
  END
 END
-''', encoding="utf-8")
+'''.replace("@RESOURCE_VERSION@", GAME_VERSION.replace(".", ",") + ",0").replace("@VERSION@", GAME_VERSION), encoding="utf-8")
     output = generated / "game-resource.o"
     run([windres, f"--preprocessor={compiler}", "--preprocessor-arg=-E", "--preprocessor-arg=-xc", "--preprocessor-arg=-DRC_INVOKED", "--codepage=65001", "-i", str(resource), "-o", str(output)], env=environment)
     return [str(output)]
@@ -274,7 +275,7 @@ def test() -> None:
     run([str(executable)])
 
 
-INSTRUCTIONS = """SORPRESA VIVI’S — AVENTURA 2D PARA PC — 0.4.0
+INSTRUCTIONS = f"""SORPRESA VIVI’S — AVENTURA 2D PARA PC — {GAME_VERSION}
 
 Windows: descomprime todo y abre Sorpresa-Vivis.exe.
 Linux: descomprime y ejecuta ./Sorpresa-Vivis; si hace falta, chmod +x Sorpresa-Vivis.
@@ -291,6 +292,8 @@ Los menús funcionan con ratón o flechas y Enter.
 Mando: stick izquierdo / cruceta para mover, stick derecho para apuntar y disparar.
 
 Explora cuatro pisos de salas generadas, vence enemigos y elige recompensas.
+Al despejar la sala, las puertas se abren: cruza caminando, sin pulsar E.
+Encontrarás pelusas animadas, bolas de pelo, gatitos y Maliketh.
 Recoge monedas, combina mejoras y encuentra el Churu.
 Continuar recupera tu partida completa: salas, salud, objetos y progreso.
 Consulta los controles y ajustes dentro del juego.
@@ -312,6 +315,9 @@ def package(target: str, executable: Path) -> None:
         archive.write(raylib_dir(target) / "LICENSE", "licenses/LICENSE-raylib.txt")
         archive.write(ROOT / "native_game/THIRD_PARTY.md", "licenses/THIRD_PARTY.txt")
     print(f"Packaged {output} ({output.stat().st_size / 1048576:.2f} MiB)")
+    versioned = output.with_name(f"Sorpresa-Vivis-{GAME_VERSION}-{label}.zip")
+    shutil.copyfile(output, versioned)
+    print(f"Versioned package: {versioned}")
 
 
 def main() -> None:

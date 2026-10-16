@@ -1,6 +1,6 @@
 # Sorpresa Vivis
 
-**Aventura roguelite 2D para PC · C++17 y raylib · versión 0.4.0.**
+**Aventura roguelite 2D para PC · C++17 y raylib · versión 0.4.1.**
 
 Vivi y Wisky recorren habitaciones conectadas para recuperar a sus amigos. Cada partida genera cuatro pisos distintos: **Pachonidad**, **Bigotes Encontrados**, **El alter ego de Wiky** y **Refugio de Maliketh**. Explora, esquiva, elige mejoras y baja al siguiente piso. La estructura se inspira en los juegos de mazmorras por habitaciones, con personajes, arte y música propios y un tono tierno.
 
@@ -28,7 +28,7 @@ Todo el arte, tipografía y audio está integrado en el ejecutable. Funciona sin
 
 ## Habitaciones y recompensas
 
-Cada piso contiene entre **8 y 11 habitaciones** conectadas, con distribución, encuentros, obstáculos y premios aleatorios. El minimapa muestra las salas descubiertas y las puertas pendientes; TAB abre el mapa con leyenda. Las puertas se sellan durante el combate y se abren cuando desaparecen los enemigos. Una sala despejada permanece despejada al volver.
+Cada piso contiene entre **8 y 11 habitaciones** conectadas, con distribución, encuentros, obstáculos y premios aleatorios. El minimapa muestra las salas descubiertas y las puertas pendientes; TAB abre el mapa con leyenda. Las puertas se sellan durante el combate y se abren cuando desaparecen los enemigos. Una sala despejada permanece despejada al volver. Para pasar, camina hacia la puerta: la entrada se alinea suavemente, conserva tu posición lateral y no necesita E.
 
 - **Encuentros:** enemigos, monedas y posibles corazones.
 - **Tesoro:** elige una de tres mejoras gratuitas en el pedestal central.
@@ -41,7 +41,7 @@ Hay **14 objetos**, incluidos daño, velocidad, cadencia, disparo múltiple, má
 
 Wisky ataca automáticamente con **veneno verde**. Su acción E envenena a los enemigos cercanos; la nube deja daño persistente si tienes ese objeto. La esquiva protege brevemente y recarga en 1.6 segundos. Puedes moverte y disparar en direcciones independientes, o usar Espacio para apuntado automático.
 
-Los ocho tipos de enemigos tienen comportamientos distintos: persecución, saltos, disparos, embestidas, órbitas, esporas y ecos. Los cuatro guardianes combinan ataques y cambian de patrón al perder vida. Las señales en el suelo anuncian saltos, cargas y zonas peligrosas antes de activarse.
+Los ocho tipos de enemigos tienen siluetas y animaciones propias: pelusas traviesas, bolas de pelo saltarinas o regurgitadas, ovillos revoltosos, polillas pelusosas y tres clases de gatitos reclutados por Maliketh. Corren, flanquean, rodean obstáculos, acechan, saltan, ruedan, escupen flemas o lanzan magia lunar. Se separan entre sí y se mantienen en movimiento entre ataques. Las patas, orejas, colas, alas y mechones se animan según su acción, con anticipación antes de cargar y estiramiento al saltar. Los cuatro guardianes combinan ataques y cambian de patrón al perder vida. Las señales en el suelo anuncian saltos, cargas y zonas peligrosas antes de activarse.
 
 ## Amigos y final
 
@@ -56,6 +56,10 @@ Cada piso tiene música original propia, con un arreglo más intenso para su jef
 ![Combate y veneno de Wisky](docs/previews/native-combate.png)
 
 ![Habitaciones y mapa del piso](docs/previews/native-mapa.png)
+
+![Pelusas, bolas de pelo y gatitos de Maliketh en movimiento](docs/previews/native-enemigos.gif)
+
+[Ver las poses de los ocho enemigos](docs/previews/native-enemigos.png).
 
 ## Guardado
 
@@ -90,7 +94,7 @@ build/native/linux/Sorpresa-Vivis --smoke-test
 build/native/linux/Sorpresa-Vivis --capture /tmp/vivis-preview
 ```
 
-Validación de esta versión: **55 escenarios** del modelo pasan, también con ASAN, UBSAN e iteradores de depuración; **400 mapas** conectados y **100 finales** con churu garantizado. La auditoría de accesibilidad y guardado cubrió **3,800 habitaciones**. La prueba real de teclado y ratón pasó **46 comprobaciones**, incluidas cinco reaperturas y conservación exacta del perfil. Windows se comprobó con Wine 10.
+Validación de esta versión: **63 escenarios** del modelo pasan, también con ASAN, UBSAN e iteradores de depuración; **400 mapas** conectados, **1,008 combinaciones de cruce de puertas** y **100 finales** con churu garantizado. La auditoría de accesibilidad y guardado cubrió **3,800 habitaciones**. La prueba de interfaz de la versión 0.4.0 pasó **46 comprobaciones**, incluidas cinco reaperturas y conservación exacta del perfil. Windows se comprobó con Wine 10.
 
 El segundo comando captura veinte escenas y termina automáticamente. La entrada de mando está implementada; la validación en este entorno no incluye un mando físico.
 

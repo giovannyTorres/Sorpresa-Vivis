@@ -15,6 +15,34 @@ bool blocked(Vector2 a,Vector2 b,const std::vector<Rectangle>& obstacles) {
         if(inside(add(a,mul(sub(b,a),float(n)/samples)),grow(r,4))) return true;
     return false;
 }
+// Guide a character overlapping the opening away from a door jamb. The
+// capture area is wider than a movement substep, so no frame rate can skip it.
+float doorAlong(Vector2 p,int direction) { return direction%2 ? p.y-405 : p.x-640; }
+float doorInward(Vector2 p,int direction) {
+    if(direction==0)return p.y-Field.y;
+    if(direction==1)return Field.x+Field.width-p.x;
+    if(direction==2)return Field.y+Field.height-p.y;
+    return p.x-Field.x;
+}
+Vector2 guideDoorMotion(const Game& game,Vector2 motion,float dt) {
+    if(game.rooms.empty()||!game.doorsOpen()||game.doorCooldown>0)return motion;
+    for(int d=0;d<4;++d) {
+        float outward=motion.x*dx[d]+motion.y*dy[d];
+        if(game.room().neighbors[d]<0||outward<=0)continue;
+        float along=doorAlong(game.player,d);
+        if(doorInward(game.player,d)>DoorApproachDepth||std::abs(along)>DoorAssistHalfWidth)continue;
+        float& tangent=d%2?motion.y:motion.x;
+        // A mostly parallel walk stays a parallel walk; assistance requires
+        // intent towards the next room and never bypasses combat locks.
+        if(outward<std::abs(tangent)*.3f)continue;
+        float target=std::clamp(along,-DoorTravelLane,DoorTravelLane);
+        float correction=std::clamp((target-along)*12.0f,-240.0f,240.0f)*dt;
+        if(std::abs(along)>DoorTravelLane)tangent*=.15f;
+        tangent+=correction;
+        break;
+    }
+    return motion;
+}
 template<class T,class P>void discard(std::vector<T>& v,P p) { v.erase(std::remove_if(v.begin(),v.end(),p),v.end()); }
 }
 const char* zoneName(int index) {
@@ -26,7 +54,7 @@ const char* roomName(RoomKind k) {
     return names[std::clamp(int(k),0,6)];
 }
 const char* enemyName(EnemyKind k) {
-    static const char* names[]={"Pelusita","Pompón saltarín","Bigote arquero","Gatito veloz","Polilla lunar","Esporita","Eco digital","Ovillo rodante","Rey Almohadón","Los Bigotes Encontrados","Wiky Wikerman · El asesino de wiskys","Maliketh la Pachona"};
+    static const char* names[]={"Pelusa traviesa","Bola de pelo saltarina","Gatito aprendiz","Gatito acechador","Polilla de pelusa","Bola de pelo regurgitada","Minino lunar","Ovillo revoltoso","Rey Almohadón","Los Bigotes Encontrados","Wiky Wikerman · El asesino de wiskys","Maliketh la Pachona"};
     return names[std::clamp(int(k),0,11)];
 }
 const ItemInfo& itemInfo(ItemId id) {
@@ -127,6 +155,14 @@ void Game::generateFloor(int index) {
             else if(r.layout==3)r.obstacles={{480,305,75,70},{725,450,75,70}};
             else if(r.layout==4)r.obstacles={{290,365,95,75},{895,365,95,75}};
             int foes=3+stage+(r.kind==RoomKind::Challenge?1:0);
+            static const EnemyKind pool[4][6]={
+                {EnemyKind::Fluff,EnemyKind::Hopper,EnemyKind::Charger,EnemyKind::Spore,EnemyKind::WhiskerShooter,EnemyKind::Pouncer},
+                {EnemyKind::WhiskerShooter,EnemyKind::Pouncer,EnemyKind::Hopper,EnemyKind::Fluff,EnemyKind::Mirror,EnemyKind::Charger},
+                {EnemyKind::Mirror,EnemyKind::Spore,EnemyKind::Charger,EnemyKind::WhiskerShooter,EnemyKind::Pouncer,EnemyKind::Moth},
+                {EnemyKind::Moth,EnemyKind::Pouncer,EnemyKind::Spore,EnemyKind::Mirror,EnemyKind::WhiskerShooter,EnemyKind::Hopper}};
+            auto order=std::array<EnemyKind,6>{};
+            std::copy(std::begin(pool[stage]),std::end(pool[stage]),order.begin());
+            for(int n=5;n>0;--n)std::swap(order[n],order[randomInt(n+1)]);
             for(int n=0;n<foes;++n) {
                 Enemy e; e.pos=spots[(n+int(r.seed%8))%8];
                 bool unsafe=true;int attempt=0;
@@ -134,12 +170,8 @@ void Game::generateFloor(int index) {
                     unsafe=false;for(auto ob:r.obstacles)if(inside(e.pos,grow(ob,36)))unsafe=true;
                     if(unsafe)e.pos={float(230+randomInt(820)),float(260+randomInt(300))};
                 }
-                static const EnemyKind pool[4][4]={
-                    {EnemyKind::Fluff,EnemyKind::Hopper,EnemyKind::Charger,EnemyKind::Spore},
-                    {EnemyKind::WhiskerShooter,EnemyKind::Pouncer,EnemyKind::Hopper,EnemyKind::Fluff},
-                    {EnemyKind::Mirror,EnemyKind::Spore,EnemyKind::Charger,EnemyKind::WhiskerShooter},
-                    {EnemyKind::Moth,EnemyKind::Pouncer,EnemyKind::Spore,EnemyKind::Mirror}};
-                e.kind=pool[stage][randomInt(4)]; e.hp=e.maxHp=3.5f+stage*.8f+(r.kind==RoomKind::Challenge?1:0);
+                e.kind=order[n%6]; e.hp=e.maxHp=3.5f+stage*.8f+(r.kind==RoomKind::Challenge?1:0);
+                e.age=randomInt(1000)*.01f;
                 e.timer=.8f+randomInt(100)*.014f; r.enemies.push_back(e);
             }
         } else if(r.kind==RoomKind::Boss) {
@@ -166,7 +198,8 @@ void Game::enterRoom(int index,int fromDirection) {
     if(fromDirection>=0&&fromDirection<4)facing={float(dx[fromDirection]),float(dy[fromDirection])};
     companion={std::clamp(player.x-48,90.0f,1190.0f),std::clamp(player.y+24,185.0f,635.0f)};
     digitalCompanion={std::clamp(player.x+50,90.0f,1190.0f),std::clamp(player.y-5,185.0f,635.0f)};
-    moving=companionMoving=false;doorCooldown=.45f;invincible=1.2f;transitionTime=.32f;
+    moving=companionMoving=false;doorCooldown=.18f;invincible=1.2f;
+    transitionPending=fromDirection>=0;transitionTime=transitionPending?.14f:.32f;
     shootCooldown=castTime=helpCastTime=hurtTime=dashTime=0;mapOpen=inventoryOpen=false;
     if(wiskyCorrupted)notify("Wiky Wikerman tomó el control · Derrótalo para recuperar a Wisky",6);
     else notify(std::string(roomName(r.kind))+" · "+zoneName(stage),2.5f);
@@ -174,7 +207,12 @@ void Game::enterRoom(int index,int fromDirection) {
 bool Game::travel(int direction) {
     if(direction<0||direction>3||rooms.empty()||!doorsOpen())return false;
     int next=room().neighbors[direction];if(next<0)return false;
-    storeRoom();enterRoom(next,direction);requestCheckpoint();cues.push_back(Cue::Transition);return true;
+    float along=std::clamp(doorAlong(player,direction),-DoorTravelLane,DoorTravelLane);
+    storeRoom();enterRoom(next,direction);
+    if(direction%2)player.y=405+along;else player.x=640+along;
+    companion={std::clamp(player.x-48,90.0f,1190.0f),std::clamp(player.y+24,185.0f,635.0f)};
+    digitalCompanion={std::clamp(player.x+50,90.0f,1190.0f),std::clamp(player.y-5,185.0f,635.0f)};
+    requestCheckpoint();cues.push_back(Cue::Transition);return true;
 }
 int Game::clearedRooms() const { int n=0;for(const auto&r:rooms)if(r.visited&&r.cleared)++n;return n; }
 bool Game::walkable(Vector2 p,float radius) const {
@@ -338,7 +376,9 @@ void Game::update(float dt,const Input& input) {
     moving=length(direction)>.05f;if(moving)facing=unit(direction);
     aim={input.aimX,input.aimY};if(length(aim)>.15f)aim=unit(aim);else aim={0,0};
     if(input.dash)dash();
-    player=move(player,mul(dashTime>0?facing:direction,(dashTime>0?720:stats.speed)*dt));dashTime=remaining(dashTime,dt);
+    Vector2 motion=mul(dashTime>0?facing:direction,(dashTime>0?720:stats.speed)*dt);
+    motion=guideDoorMotion(*this,motion,dt);
+    player=move(player,motion);dashTime=remaining(dashTime,dt);
     if(input.shoot||length(aim)>.15f)shoot();
     if(input.help)help();
     if(screen!=Screen::Playing)return;
@@ -350,10 +390,12 @@ void Game::update(float dt,const Input& input) {
     for(auto&p:particles){p.life-=dt;p.pos=add(p.pos,mul(p.velocity,dt));}
     discard(particles,[](const Particle&p){return p.life<=0;});
     if(doorsOpen()&&doorCooldown<=0) {
-        if(direction.y<0&&player.y<=Field.y+19&&std::abs(player.x-640)<48)travel(0);
-        else if(direction.x>0&&player.x>=Field.x+Field.width-19&&std::abs(player.y-405)<48)travel(1);
-        else if(direction.y>0&&player.y>=Field.y+Field.height-19&&std::abs(player.x-640)<48)travel(2);
-        else if(direction.x<0&&player.x<=Field.x+19&&std::abs(player.y-405)<48)travel(3);
+        for(int d=0;d<4;++d) {
+            if(motion.x*dx[d]+motion.y*dy[d]<=0||room().neighbors[d]<0)continue;
+            if(doorInward(player,d)<=DoorCaptureDepth&&std::abs(doorAlong(player,d))<=DoorAssistHalfWidth) {
+                if(travel(d))break;
+            }
+        }
     }
 }
 }

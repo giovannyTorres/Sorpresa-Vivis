@@ -43,105 +43,371 @@ void pixelRing(Vector2 pos,float radius,Color color,int size=3,int count=42) {
         pixel(add(pos,{std::cos(angle)*radius-size/2.0f,std::sin(angle)*radius-size/2.0f}),size,color);
     }
 }
-void spriteMask(const char* const* shape,int rows,Vector2 feet,float scale,Color body,Color accent,Color highlight,bool flash=false) {
-    int width=0;for(int y=0;y<rows;++y)for(int x=0;shape[y][x];++x)width=std::max(width,x+1);
-    for(int y=0;y<rows;++y)for(int x=0;shape[y][x];++x) {
-        char key=shape[y][x];if(key==' ')continue;
-        Color color=key=='o'?Color{34,31,47,255}:key=='b'?body:key=='h'?highlight:key=='a'?accent:
-            key=='e'?Color{34,31,47,255}:key=='w'?Color{255,247,230,255}:Pink;
-        if(flash&&key!='o'&&key!='e')color={255,219,234,255};
-        DrawRectangle(int(feet.x+(x-width/2.0f)*scale),int(feet.y+(y-rows)*scale),int(scale),int(scale),color);
+// Draw the little creatures on a two-pixel lattice. Their outlines, fur and expressions
+// share a palette, while each attack has a recognizable silhouette and anticipation.
+constexpr Color EnemyInk{34,29,43,255}, EnemyCream{255,239,214,255};
+struct CreaturePaint {
+    Vector2 feet{};
+    float sx{1},sy{1},unit{2},rotation{};
+    Vector2 pivot{};
+    bool flash{},mirror{};
+    void r(float x,float y,float w,float h,Color color) const {
+        float cx=x+w*.5f,cy=y+h*.5f;
+        if(rotation!=0) {
+            float dx=cx-pivot.x,dy=cy-pivot.y,c=std::cos(rotation),s=std::sin(rotation);
+            cx=pivot.x+dx*c-dy*s;cy=pivot.y+dx*s+dy*c;
+        }
+        if(mirror)cx=-cx;
+        float width=std::max(2.0f,std::round(w*unit*sx*.5f)*2),height=std::max(2.0f,std::round(h*unit*sy*.5f)*2);
+        int left=int(std::round((feet.x+cx*unit*sx-width*.5f)*.5f))*2;
+        int top=int(std::round((feet.y+cy*unit*sy-height*.5f)*.5f))*2;
+        if(flash&&(color.r>72||color.g>72||color.b>82)) color={255,224,238,color.a};
+        DrawRectangle(left,top,int(width),int(height),color);
+    }
+    void oval(float x,float y,float rx,float ry,Color color) const {
+        for(int row=-int(ry);row<=int(ry);++row) {
+            float t=float(row)/std::max(1.0f,ry);
+            int half=int(std::round(rx*std::sqrt(std::max(0.0f,1-t*t))));
+            if(half>0)r(x-half,y+row,half*2,1,color);
+        }
+    }
+    void blob(float x,float y,float rx,float ry,Color body,Color outline=EnemyInk) const {
+        oval(x,y,rx+1,ry+1,outline);oval(x,y,rx,ry,body);
+    }
+    void line(int x,int y,int ex,int ey,int width,Color color) const {
+        int dx=std::abs(ex-x),stepX=x<ex?1:-1,dy=-std::abs(ey-y),stepY=y<ey?1:-1,error=dx+dy;
+        for(;;) {
+            r(float(x),float(y),float(width),float(width),color);
+            if(x==ex&&y==ey)break;
+            int twice=error*2;
+            if(twice>=dy){error+=dy;x+=stepX;}
+            if(twice<=dx){error+=dx;y+=stepY;}
+        }
+    }
+};
+void creatureShadow(Vector2 feet,float width,float height,float alpha=80) {
+    CreaturePaint p;p.feet=feet;p.unit=1;
+    p.oval(0,2,width,height,{5,10,18,static_cast<unsigned char>(alpha)});
+}
+void catEar(const CreaturePaint& p,int side,float top,float width,float height,Color fur,Color light,Color inner) {
+    float x=side<0?-width-6:6;
+    for(int row=0;row<int(height);++row) {
+        float spread=std::min(width,float(row)*.65f+2);
+        float left=side<0?x:x+width-spread;
+        p.r(left,top+row,spread,1,EnemyInk);
+        if(row>2&&spread>3)p.r(left+1,top+row+1,spread-2,1,fur);
+        if(row>4&&row<height-2&&spread>5)p.r(left+2,top+row+1,spread-4,1,inner);
+    }
+    p.r(side<0?x+1:x+width-2,top+3,1,4,light);
+}
+void brightEyes(const CreaturePaint& p,float x,float y,float spacing,bool blink,Color iris,int look=0,bool narrow=false) {
+    for(int side: {-1,1}) {
+        float px=x+side*spacing;
+        if(blink) {p.r(px-2,y+2,5,1,EnemyInk);p.r(px+side,y+1,2,1,EnemyInk);continue;}
+        p.blob(px,y+2,3,3,EnemyCream);
+        p.r(px-1+look,y,3,narrow?3:5,iris);p.r(px+look,y+1,1,3,EnemyInk);
+        p.r(px-1+look,y,1,1,WHITE);
+        if(narrow)p.r(px-3,y-1,6,2,EnemyInk);
     }
 }
-void littleEnemy(const Enemy& enemy,float clock) {
-    static const char* fluff[]={"   oo     oo   ","  ohhooooohho  "," oohhbbbbbhhoo "," obbhbbbbbhbbo ","obbbwwbbbwwbbbo","obbbewbbbwebbbo"," obbppbbbppbbo "," obbbbbbbbbbbo ","  obbbhhbbbbo  "," oobbboobbboo  "," obbbo  obbbo  ","  ooo    ooo   "};
-    static const char* hopper[]={"  ooo      ooo "," ohbbo    obbho"," ohbbo    obbho"," obbbooooobbbo ","  obbhhhhbbbo  "," obwwbbbbwwbbo ","obbewbbbbwebbbo"," obbppbbppbbo  ","  obbbbbbbbo   "," oohhboobhhhoo "," obbbboobbbbbo ","  ooo    ooo   "};
-    static const char* whisker[]={"      ooo      ","     ohbho     ","   oobbbbboo   ","  obbhhhhbbbo  "," obbwwbbwwbbbo ","obbbeabbbaebbbo","aaaabbbpbbbaaaa","  oabbbbbbao   ","aa obbbbbbo aaa","    obbbbo     ","   oobbbboo    ","    oooooo     "};
-    static const char* pouncer[]={" oooo      oooo "," ohhbo    obhho "," obhhboooobhbbo "," obbbbbbbbbbbbo ","  obwwbbbbwwbo  ","  obewbbbbwebo  ","  obbppbbppbbo  "," oobbbboobbbboo ","obbhbbbbbbbbhbbo"," obbbbbbbbbbbbo ","  obbbo  obbbo  ","   ooo    ooo   "};
-    static const char* moth[]={" ooo        ooo ","ohhboo    oobhho","ohhhabo  obahhho"," obhhaooooahhbo "," obbaaweew aabbo","  obbabweeb abbo","   obbaaaabbo   ","  obhhaaahhbbo  "," ohhhaooahhhho  "," ohhbo  obhhho  ","  ooo    ooo    "};
-    static const char* spore[]={"    oooooo     ","  oobbwwbboo   "," obhbbbbbhbbo  ","obhbwwbbbbbhbo ","obbbbbbbwbbbbo "," obbwwbbbbboo  ","  oooohhoooo   ","    ohhhho     ","    ohwwho     ","    oheeho     ","   oohhhhoo    ","    oooooo     "};
-    static const char* mirror[]={"     aaaa      ","   aaohhoaa    ","  aohhhhhhoa   "," aohhwwhhhhoa  "," aohwhhhwhhoa  "," aohhewhehhoa  "," aohhwhhwhhoa  "," aohhhpphhhoa  ","  aohhhhhhoa   ","   aaohhoaa    ","    oobboo     ","   obbbbbbo    "};
-    static const char* charger[]={"  aaa      aaa  "," aawaooooooawaa ","  aobbhhhhboa   "," oobbbhhhhbbboo "," obbwwbbbbwwbbo ","obbbewbbbbwebbbo","obbbbbaaaabbbbbo"," obbbbawwabbbbo ","  obbbaeeabbbo  ","  obbbbbbbbbbo  ","  obbbo  obbbo  ","   ooo    ooo   "};
-    const char*const* mask=fluff;int rows=12;
-    Color body{151,124,185,255},accent{212,188,237,255},highlight{193,170,217,255};
-    switch(enemy.kind) {
-    case EnemyKind::Hopper:mask=hopper;body={139,190,166,255};accent={247,193,136,255};highlight={189,225,193,255};break;
-    case EnemyKind::WhiskerShooter:mask=whisker;body={224,178,104,255};accent=Gold;highlight={255,224,170,255};break;
-    case EnemyKind::Pouncer:mask=pouncer;body={209,129,145,255};accent={247,205,151,255};highlight={245,174,181,255};break;
-    case EnemyKind::Moth:mask=moth;rows=11;body={133,119,178,255};accent={235,207,244,255};highlight={184,166,222,255};break;
-    case EnemyKind::Spore:mask=spore;body={123,164,103,255};accent=Green;highlight={207,225,168,255};break;
-    case EnemyKind::Mirror:mask=mirror;body={143,185,205,255};accent={207,167,216,255};highlight={192,225,232,255};break;
-    case EnemyKind::Charger:mask=charger;body={119,101,145,255};accent={221,189,155,255};highlight={165,141,183,255};break;
-    default:break;
+void kittyMuzzle(const CreaturePaint& p,float x,float y,Color muzzle,bool open=false) {
+    p.oval(x-2,y+1,3,2,muzzle);p.oval(x+2,y+1,3,2,muzzle);
+    p.r(x-1,y-1,3,2,{222,146,160,255});p.r(x,y+1,1,2,EnemyInk);
+    if(open) {p.r(x-1,y+3,3,3,EnemyInk);p.r(x,y+4,2,1,Pink);}
+    else {p.r(x-2,y+3,2,1,EnemyInk);p.r(x+1,y+3,2,1,EnemyInk);}
+}
+void kittenScarf(const CreaturePaint& p,float y,float flutter,Color scarf,bool moon=false) {
+    p.r(-10,y,20,5,EnemyInk);p.r(-9,y+1,18,3,scarf);
+    p.r(6,y+3,5,7,EnemyInk);p.r(7,y+4,3,5,scarf);
+    p.r(9,y+5,6+flutter,3,scarf);p.r(12+flutter,y+7,3,3,scarf);
+    p.r(-3,y+3,5,5,Gold);p.r(-2,y+4,3,3,{180,132,82,255});
+    if(moon)p.r(0,y+3,3,3,scarf);else p.r(-1,y+5,1,2,EnemyInk);
+}
+void tinyPaws(const CreaturePaint& p,float y,float stride,Color fur,Color light,float spread=6) {
+    for(int side: {-1,1}) {
+        float py=y+(side<0?stride:-stride);
+        p.blob(side*spread,py,4,2,fur);p.r(side*spread-2,py-1,4,1,light);
+        p.r(side*spread-1,py+1,1,1,{170,129,145,255});
     }
-    DrawEllipse(int(enemy.pos.x),int(enemy.pos.y+2),27,8,{5,10,18,70});
-    float bob=std::sin(clock*(enemy.kind==EnemyKind::Moth?9:5)+enemy.age)*2;
-    if(enemy.kind==EnemyKind::Hopper&&enemy.cooldown>0)bob-=std::sin(enemy.cooldown/0.52f*3.1415926f)*21;
-    if(enemy.kind==EnemyKind::Moth)bob-=12;
-    Vector2 feet=add(enemy.pos,{0,bob});
-    spriteMask(mask,rows,feet,4,body,accent,highlight,enemy.flash>0);
+}
+void furryBall(const CreaturePaint& p,float x,float y,float radius,Color fur,Color light,Color shade,float time) {
+    p.blob(x,y,radius,radius*.85f,fur);
+    for(int i=0;i<10;i++) {
+        float angle=i*.6283185f;
+        float rx=x+std::cos(angle)*(radius-.3f),ry=y+std::sin(angle)*(radius*.83f-.2f);
+        int shake=int(std::sin(time*3+i)*1.2f);
+        p.r(rx-2,ry-2+shake,4,4,EnemyInk);p.r(rx-1,ry-1+shake,3,3,i%3?fur:shade);
+    }
+    p.oval(x-3,y-4,radius*.64f,radius*.33f,light);
+    p.r(x-7,y-4,3,2,fur);p.r(x+3,y-5,4,2,fur);
+    for(int i=0;i<5;i++) {
+        int px=int(x)-8+i*4,py=int(y)+4+(i%2)*2;
+        p.line(px,py,px+3,py-2,1,shade);
+    }
+}
+void fluffCreature(const CreaturePaint& p,float time,bool blink,bool charging) {
+    const Color fur{179,151,171,255},light{224,205,212,255},shade{129,104,139,255};
+    furryBall(p,0,-15,13,fur,light,shade,time);
+    for(int side: {-1,1}) {
+        float flap=std::sin(time*7+side)*1.4f;
+        p.blob(side*15,-11+flap,3,3,light);
+        p.r(side*12-1,-28,3,4,shade);p.r(side*12-2,-30,3,3,fur);
+    }
+    p.line(-2,-27,1,-31,1,EnemyInk);p.line(1,-31,4,-31,1,EnemyInk);p.r(4,-30,1,3,shade);
+    brightEyes(p,0,-19,5,blink,{205,169,88,255},0,charging);
+    p.r(-10,-13,3,1,Pink);p.r(7,-13,3,1,Pink);
+    p.r(-3,-9,2,1,EnemyInk);p.r(-1,-8,4,1,EnemyInk);p.r(3,-9,1,1,EnemyInk);
+    p.r(1,-7,2,1,EnemyCream);
+    p.r(-5,-2,3,2,shade);p.r(3,-2,3,2,shade);
+}
+void hopperCreature(const CreaturePaint& p,float time,bool blink,bool charging,bool jumping) {
+    const Color fur{172,158,134,255},light{219,211,182,255},shade{118,119,108,255};
+    furryBall(p,0,-14,13,fur,light,shade,time);
+    p.line(-8,-21,-4,-23,1,shade);p.line(4,-20,8,-19,1,shade);
+    p.line(-10,-10,-7,-8,1,light);p.line(6,-8,9,-10,1,light);
+    p.line(0,-25,3,-29,1,EnemyInk);p.line(3,-29,7,-28,1,EnemyInk);
+    p.line(6,-27,3,-26,1,shade);
+    brightEyes(p,0,-18,5,blink&&!jumping,{152,174,121,255},0,charging);
+    p.r(-10,-13,2,1,{213,168,155,255});p.r(8,-13,2,1,{213,168,155,255});
+    p.r(-3,-9,6,2,EnemyInk);p.r(-1,-8,3,3,{229,157,158,255});
+    // A small celadon strand makes its hairball origin clear without anything graphic.
+    p.r(3,-8,2,6,{151,181,132,255});p.r(3,-2,3,2,{191,209,157,255});
+    if(jumping) {p.r(-7,-1,4,2,shade);p.r(4,-1,4,2,shade);}
+    else tinyPaws(p,-1,0,fur,light,6);
+}
+void babyWhisker(const CreaturePaint& p,float time,bool blink,bool charging,float stride) {
+    const Color fur{216,168,115,255},light{250,220,177,255},shade{163,118,92,255};
+    p.line(8,-8,18,-8,4,EnemyInk);p.line(18,-8,20,-15,4,EnemyInk);
+    p.line(8,-8,18,-8,2,fur);p.line(18,-8,20,-15,2,fur);p.r(18,-18,4,4,light);
+    p.blob(0,-10,9,10,fur);p.oval(0,-9,6,7,light);
+    tinyPaws(p,-1,stride,fur,light,6);
+    for(int side: {-1,1})p.blob(side*9,-11+(side<0?stride:-stride),3,4,fur);
+    catEar(p,-1,-34,8,12,fur,light,{230,163,164,255});
+    catEar(p,1,-34,8,12,fur,light,{230,163,164,255});
+    p.blob(0,-23,13,10,fur);p.oval(-2,-26,9,4,light);
+    p.r(-14,-21,3,4,fur);p.r(11,-21,3,4,fur);
+    p.r(-2,-32,3,4,shade);p.r(-9,-28,4,2,shade);p.r(6,-28,4,2,shade);
+    brightEyes(p,0,-25,5,blink,{114,171,199,255},charging?1:0,charging);
+    kittyMuzzle(p,0,-19,light,charging);
+    for(int side: {-1,1}) {
+        p.line(side*8,-19,side*16,-21,1,light);
+        p.line(side*9,-17,side*16,-16,1,light);
+    }
+    kittenScarf(p,-14,std::sin(time*6)*2,{162,119,190,255});
+}
+void stalkingKitten(const CreaturePaint& p,float time,bool blink,bool charging,float stride,bool pouncing) {
+    const Color fur{122,111,132,255},light{193,171,179,255},shade{83,77,106,255};
+    int tail=int(std::sin(time*5)*(charging?3:1));
+    p.line(7,-7,17,-9,4,EnemyInk);p.line(17,-9,20,-20+tail,4,EnemyInk);
+    p.line(7,-7,17,-9,2,fur);p.line(17,-9,20,-20+tail,2,fur);p.r(18,-23+tail,4,4,light);
+    p.blob(0,-10,9,10,fur);p.oval(-1,-9,6,7,light);
+    tinyPaws(p,-1,pouncing?stride*2:stride,fur,light,7);
+    p.blob(-9,-12+stride,3,4,fur);p.blob(9,-12-stride,3,4,fur);
+    catEar(p,-1,-43,10,22,fur,light,{186,139,162,255});
+    catEar(p,1,-43,10,22,fur,light,{186,139,162,255});
+    p.blob(0,-22,11,9,fur);p.oval(-2,-25,7,3,light);
+    p.r(-1,-31,3,5,shade);p.r(-9,-27,3,2,shade);p.r(6,-27,3,2,shade);
+    brightEyes(p,0,-24,5,blink,{227,186,108,255},1,charging||pouncing);
+    kittyMuzzle(p,0,-18,light,false);
+    for(int side: {-1,1}) {p.line(side*8,-18,side*13,-19,1,light);p.line(side*8,-16,side*14,-15,1,light);}
+    p.r(-7,-12,14,3,{109,83,144,255});p.r(3,-10,4,4,{182,142,198,255});
+}
+void fluffyMoth(const CreaturePaint& p,float time,bool blink,bool charging) {
+    float open=charging?1.0f:.25f+.75f*(.5f+.5f*std::sin(time*12));
+    const Color wing{166,143,190,255},cream{225,204,211,255},edge{104,90,145,255};
+    for(int side: {-1,1}) {
+        float x=side*(9+open*4),radius=5+open*8;
+        p.blob(x,-19,radius,13,wing);p.oval(x-side*2,-22,radius*.67f,8,cream);
+        p.blob(x-side*1,-6,radius*.8f,7,edge);p.oval(x-side*1,-8,radius*.55f,4,wing);
+        p.line(side*6,-21,side*int(12+open*9),-27,1,edge);
+        p.line(side*6,-17,side*int(14+open*8),-14,1,edge);
+        if(open>.5f) {p.blob(side*(14+open*4),-20,3,4,edge);p.r(side*(14+open*4)-1,-22,2,3,cream);}
+    }
+    p.blob(0,-15,5,13,{194,177,196,255});p.oval(-1,-17,3,9,EnemyCream);
+    p.r(-6,-9,3,2,cream);p.r(4,-9,3,2,cream);
+    p.blob(0,-27,7,7,cream);
+    p.line(-3,-32,-6,-39,1,EnemyInk);p.line(3,-32,6,-39,1,EnemyInk);
+    p.blob(-7,-40,2,2,wing);p.blob(7,-40,2,2,wing);
+    brightEyes(p,0,-29,3,blink,{145,112,173,255},0,charging);
+    p.r(-1,-22,2,1,{143,104,144,255});
+    p.line(-3,-6,-5,-2,1,EnemyInk);p.line(3,-6,5,-2,1,EnemyInk);
+}
+void crinkleHairball(const CreaturePaint& p,float time,bool blink,bool charging) {
+    const Color fur{139,163,103,255},light{206,220,155,255},shade{91,118,83,255};
+    furryBall(p,0,-13,14,fur,light,shade,time);
+    for(int i=0;i<5;i++) {
+        int x=-10+i*5;
+        p.line(x,-24,x-2,-28-(i%2)*3,1,EnemyInk);
+        p.line(x-1,-24,x-3,-27-(i%2)*2,1,shade);
+    }
+    p.r(-13,-14,3,6,{161,186,120,255});p.r(10,-11,3,7,{161,186,120,255});
+    p.r(11,-5,2,6,light);p.r(10,0,4,2,fur);
+    if(blink||charging) {
+        for(int side: {-1,1}) {p.line(side*7,-18,side*4,-16,1,EnemyInk);p.line(side*4,-16,side*7,-14,1,EnemyInk);}
+    } else {
+        p.line(-8,-18,-4,-16,1,EnemyInk);p.line(-4,-16,-8,-14,1,EnemyInk);
+        p.line(8,-18,4,-16,1,EnemyInk);p.line(4,-16,8,-14,1,EnemyInk);
+        p.r(-9,-14,1,2,EnemyCream);p.r(9,-14,1,2,EnemyCream);
+    }
+    p.r(-11,-12,3,1,{207,169,132,255});p.r(8,-12,3,1,{207,169,132,255});
+    if(charging) {p.blob(0,-8,4,3,EnemyInk);p.r(-1,-7,3,1,{189,201,139,255});}
+    else {p.r(-4,-8,3,1,EnemyInk);p.r(-1,-7,3,1,EnemyInk);p.r(2,-8,3,1,EnemyInk);}
+    p.r(-3,-5,2,3,{179,201,131,255});p.r(-2,-2,3,2,light);
+    p.r(-8,-1,4,2,shade);p.r(5,-1,4,2,shade);
+}
+void moonApprentice(const CreaturePaint& p,float time,bool blink,bool charging,float stride) {
+    const Color fur{193,176,157,255},light{239,221,192,255},mask{92,77,110,255},scarf{139,92,183,255};
+    p.line(-6,-7,-16,-9,4,EnemyInk);p.line(-16,-9,-18,-17,4,EnemyInk);
+    p.line(-6,-7,-16,-9,2,mask);p.line(-16,-9,-18,-17,2,mask);
+    float cape=std::sin(time*5)*2;
+    p.r(-12,-17,24,16,EnemyInk);p.r(-13,-11,26,10,EnemyInk);
+    p.r(-11,-16,22,14,{88,64,128,255});p.r(-10,-12,8,12,{119,83,155,255});
+    p.r(-14,-2,7,3,scarf);p.r(6+cape,-2,8,3,scarf);
+    tinyPaws(p,-1,stride,mask,fur,6);
+    catEar(p,-1,-34,8,12,fur,light,{190,151,167,255});catEar(p,1,-34,8,12,fur,light,{190,151,167,255});
+    p.blob(0,-23,11,10,fur);p.oval(-2,-27,8,4,light);
+    p.oval(0,-21,8,7,mask);p.oval(0,-17,4,3,fur);
+    brightEyes(p,0,-24,4,blink,{109,189,219,255},0,charging);
+    kittyMuzzle(p,0,-18,fur,charging);
+    kittenScarf(p,-14,std::sin(time*6)*2,scarf,true);
+    float lift=charging?-5:0;
+    p.blob(11,-10+lift,3,3,fur);p.line(14,-8+int(lift),14,-27+int(lift),1,{146,115,92,255});
+    p.blob(14,-29+lift,4,4,{192,157,225,255});
+    p.oval(16,-30+lift,3,3,mask);p.r(12,-31+lift,2,2,EnemyCream);
+    if(charging) {
+        p.r(20,-36,1,5,Purple);p.r(18,-34,5,1,Purple);
+        p.r(-19,-29,1,3,Gold);p.r(-20,-28,3,1,Gold);
+    }
+}
+void rollingHairball(const CreaturePaint& p,float time,bool blink,bool charging,bool rolling,float direction) {
+    const Color fur{171,139,124,255},light{222,190,160,255},shade{116,95,112,255};
+    p.blob(0,-14,14,13,fur);p.oval(-3,-19,10,5,light);
+    CreaturePaint spin=p;spin.pivot={0,-14};
+    spin.rotation=rolling?time*17*direction:std::sin(time*2)*.12f;
+    for(int i=0;i<8;i++) {
+        float angle=i*.785398f;
+        float x=std::cos(angle)*13,y=-14+std::sin(angle)*12;
+        spin.r(x-2,y-2,4,4,EnemyInk);spin.r(x-1,y-1,3,3,i%3?fur:shade);
+    }
+    spin.line(-12,-15,-4,-22,1,shade);spin.line(-4,-22,5,-21,1,shade);
+    spin.line(-11,-11,-3,-18,1,shade);spin.line(6,-12,12,-17,1,shade);
+    spin.line(-9,-5,-3,-10,1,light);spin.line(6,-8,11,-11,1,light);
+    brightEyes(spin,0,-16,5,blink,{180,151,184,255},0,charging);
+    spin.r(-2,-7,5,2,EnemyInk);spin.r(-1,-6,3,1,Pink);
+    if(!rolling) {p.r(-8,-1,5,2,shade);p.r(4,-1,5,2,shade);}
+}
+void littleEnemy(const Enemy& enemy,float clock,bool reduced=false) {
+    float time=reduced?0:enemy.age;
+    float speed=length(enemy.velocity),stride=speed>15?std::sin(time*(speed>190?18:10))*1.7f:0;
+    bool charging=enemy.windup>0,active=enemy.cooldown>0;
+    bool blink=!charging&&std::fmod(time+int(enemy.kind)*.57f,4.7f)>4.54f;
+    float bounce=reduced?0:std::sin(time*5+int(enemy.kind))*.8f;
+    float lift=0,sx=1,sy=1;
+    switch(enemy.kind) {
+        case EnemyKind::Fluff:lift=4+bounce*2;break;
+        case EnemyKind::Hopper:
+            if(active) {
+                float jump=std::sin(std::clamp(1-enemy.cooldown/.52f,0.0f,1.0f)*3.14159265f);
+                lift=reduced?0:jump*42;sx=1-jump*.11f;sy=1+jump*.07f;
+            } else if(charging) {sx=1.19f;sy=.73f;}
+            else if(enemy.timer>1.5f) {sx=1.13f;sy=.83f;}
+            break;
+        case EnemyKind::Pouncer:if(charging||active){sx=active?1.13f:1.08f;sy=active?.80f:.76f;}break;
+        case EnemyKind::Moth:lift=reduced?12:15+std::sin(time*5)*5;break;
+        case EnemyKind::Spore:if(charging){sx=1.11f;sy=1.08f;}break;
+        case EnemyKind::Charger:if(charging){sx=1.10f;sy=.88f;}break;
+        default:if(charging){sx=1.04f;sy=.93f;}break;
+    }
+    if(reduced){sx=1;sy=1;stride=0;}
+    creatureShadow(enemy.pos,enemy.kind==EnemyKind::Moth?25:27-lift*.13f,enemy.kind==EnemyKind::Moth?6:7,enemy.kind==EnemyKind::Moth?55:83-lift*.55f);
+    CreaturePaint p;p.feet=add(enemy.pos,{0,bounce-lift});p.sx=sx;p.sy=sy;p.flash=enemy.flash>0;
+    p.mirror=enemy.kind==EnemyKind::WhiskerShooter||enemy.kind==EnemyKind::Pouncer||enemy.kind==EnemyKind::Mirror;
+    p.mirror=p.mirror&&(std::abs(enemy.velocity.x)>8?enemy.velocity.x<0:enemy.target.x<enemy.pos.x);
+    if(active&&(enemy.kind==EnemyKind::Pouncer||enemy.kind==EnemyKind::Charger)&&!reduced) {
+        Vector2 back=mul(unit(enemy.velocity),-1);
+        for(int i=1;i<4;i++) {
+            CreaturePaint dust;dust.feet=add(enemy.pos,mul(back,i*13.f));
+            dust.oval(0,0,5-i,2,{185,165,161,static_cast<unsigned char>(66-i*13)});
+        }
+    }
+    switch(enemy.kind) {
+        case EnemyKind::Hopper:hopperCreature(p,time,blink,charging,active);break;
+        case EnemyKind::WhiskerShooter:babyWhisker(p,time,blink,charging,stride);break;
+        case EnemyKind::Pouncer:stalkingKitten(p,time,blink,charging,stride,active);break;
+        case EnemyKind::Moth:fluffyMoth(p,time,blink,charging);break;
+        case EnemyKind::Spore:crinkleHairball(p,time,blink,charging);break;
+        case EnemyKind::Mirror:moonApprentice(p,time,blink,charging,stride);break;
+        case EnemyKind::Charger:rollingHairball(p,time,blink,charging,active&&!reduced,enemy.velocity.x<0?-1.f:1.f);break;
+        default:fluffCreature(p,time,blink,charging);break;
+    }
     if(enemy.poisonLeft>0) {
         for(int n=0;n<3;++n) {
-            float phase=std::fmod(clock*0.7f+n*0.31f,1.0f);
-            pixel(add(feet,{float(n*19-20),-17-phase*45}),3,Fade(Green,1-phase));
+            float phase=std::fmod(clock*.7f+n*.31f,1.0f);
+            pixel(add(p.feet,{float(n*19-20),-17-phase*45}),3,Fade(Green,1-phase));
         }
-        pixelRing(enemy.pos,24,Fade(Green,0.4f),2,18);
+        pixelRing(enemy.pos,24,Fade(Green,.4f),2,18);
     }
-    if(enemy.hp<enemy.maxHp) {
-        DrawRectangle(int(feet.x-23),int(feet.y-rows*4-10),46,4,{25,24,39,255});
-        DrawRectangle(int(feet.x-22),int(feet.y-rows*4-9),int(44*std::clamp(enemy.hp/enemy.maxHp,0.0f,1.0f)),2,enemy.poisonLeft>0?Green:accent);
+    if(enemy.hp<enemy.maxHp&&enemy.maxHp>0) {
+        float top=enemy.kind==EnemyKind::Moth?98:enemy.kind==EnemyKind::Pouncer?87:82;
+        DrawRectangle(int(p.feet.x-25),int(p.feet.y-top),50,5,{25,24,39,255});
+        DrawRectangle(int(p.feet.x-24),int(p.feet.y-top+1),int(48*std::clamp(enemy.hp/enemy.maxHp,0.0f,1.0f)),3,enemy.poisonLeft>0?Green:Purple);
     }
 }
-void plushBoss(const Enemy& enemy,float clock) {
-    const bool pillow=enemy.kind==EnemyKind::PillowBoss;
-    const Color outline{45,36,55,255};
-    const Color body=pillow?Color{220,182,206,255}:Color{225,181,118,255};
-    const Color light=pillow?Color{249,218,230,255}:Color{250,224,176,255};
-    Vector2 p=add(enemy.pos,{0,std::sin(clock*3)*3});
-    DrawEllipse(int(p.x),int(enemy.pos.y+3),59,14,{5,10,18,95});
-    DrawRectangle(int(p.x-62),int(p.y-101),124,86,outline);
-    DrawRectangle(int(p.x-72),int(p.y-88),144,59,outline);
-    DrawRectangle(int(p.x-56),int(p.y-110),112,104,outline);
-    DrawRectangle(int(p.x-58),int(p.y-96),116,76,body);
-    DrawRectangle(int(p.x-67),int(p.y-83),134,49,body);
-    DrawRectangle(int(p.x-51),int(p.y-105),102,96,body);
-    DrawRectangle(int(p.x-43),int(p.y-99),86,8,light);
-    DrawRectangle(int(p.x-61),int(p.y-79),7,39,light);
+void plushBoss(const Enemy& enemy,float clock,bool reduced=false) {
+    bool pillow=enemy.kind==EnemyKind::PillowBoss,charging=enemy.windup>0,moving=length(enemy.velocity)>15;
+    float time=reduced?0:enemy.age,stride=moving&&!reduced?std::sin(time*10)*1.5f:0;
+    bool blink=!charging&&std::fmod(time+1.4f,5.1f)>4.94f;
+    CreaturePaint p;p.unit=4;p.feet=add(enemy.pos,{0,reduced?0:std::sin(time*2.7f)*2});p.flash=enemy.flash>0;
+    if(charging&&!reduced){p.sx=1.06f;p.sy=.94f;}
+    if(enemy.cooldown>0&&!reduced){p.sx=1.10f;p.sy=.88f;}
+    creatureShadow(enemy.pos,pillow?66:69,13,100);
     if(pillow) {
-        // Stitched corners, tiny paws and a crooked button crown.
-        for(int n=0;n<5;++n) {
-            DrawRectangle(int(p.x-45+n*22),int(p.y-85),7,3,{179,137,168,255});
-            DrawRectangle(int(p.x-45+n*22),int(p.y-23),7,3,{179,137,168,255});
+        const Color fur{213,177,199,255},light{250,218,224,255},shade{170,128,164,255};
+        for(int side: {-1,1}) {
+            float gesture=charging?-4:std::sin(time*3+side)*1.5f;
+            p.blob(side*20,-15+gesture,4,7,fur);p.r(side*20-1,-18+gesture,2,5,light);
+            p.r(side*18-2,-29,4,5,shade);p.r(side*18-2,-5,4,5,shade);
+            p.r(side*20-1,-31,3,3,light);p.r(side*20-1,-2,3,3,light);
         }
-        DrawRectangle(int(p.x-24),int(p.y-126),48,18,outline);
-        DrawRectangle(int(p.x-20),int(p.y-131),8,22,Gold);
-        DrawRectangle(int(p.x-4),int(p.y-136),8,27,Gold);
-        DrawRectangle(int(p.x+12),int(p.y-129),8,20,Gold);
-        heart(add(p,{0,-115}),1.2f,Pink);
+        p.r(-15,-30,30,29,EnemyInk);p.r(-18,-27,36,23,EnemyInk);p.r(-19,-23,38,15,EnemyInk);
+        p.r(-14,-29,28,27,fur);p.r(-17,-26,34,21,fur);p.r(-18,-22,36,13,fur);
+        p.r(-13,-28,26,3,light);p.r(-16,-25,3,15,light);p.r(-13,-5,27,2,shade);
+        for(int stitch=-12;stitch<=12;stitch+=4) {p.r(stitch,-24,2,1,shade);p.r(stitch,-7,2,1,light);}
+        for(int side: {-1,1}) {p.r(side*14,-20,1,3,shade);p.r(side*14,-13,1,3,shade);}
+        tinyPaws(p,-1,stride,fur,light,10);
+        p.r(-7,-35,14,5,EnemyInk);p.r(-6,-35,12,4,Gold);
+        for(int col=-1;col<=1;col++) {p.r(col*5-1,-40+(col?2:0),3,7,Gold);p.r(col*5,-40+(col?2:0),1,2,EnemyCream);}
+        p.r(-1,-34,3,3,Pink);
+        brightEyes(p,0,-19,7,blink,{128,97,138,255},0,charging);
+        p.r(-12,-13,4,1,{231,141,173,255});p.r(9,-13,4,1,{231,141,173,255});
+        kittyMuzzle(p,0,-11,light,charging);
+        heart(add(p.feet,{0,-93*p.sy}),1.35f,Pink);
     } else {
-        // Huge matching whiskers define this guardian's silhouette.
-        for(int side:{-1,1})for(int n=0;n<3;++n) {
-            Vector2 from=add(p,{float(side*39),float(-43+n*5)});
-            Vector2 end=add(p,{float(side*(95-n*3)),float(-57+n*17)});
-            DrawLineEx(from,end,6,outline);DrawLineEx(add(from,{0,-2}),add(end,{0,-2}),3,Gold);
+        const Color fur{215,169,115,255},light{250,224,179,255},shade{161,118,91,255};
+        p.line(11,-8,23,-10,5,EnemyInk);p.line(23,-10,25,-21,5,EnemyInk);
+        p.line(11,-8,23,-10,3,fur);p.line(23,-10,25,-21,3,fur);p.r(23,-24,5,5,light);
+        p.blob(0,-12,13,13,fur);p.oval(0,-10,9,9,light);tinyPaws(p,-1,stride,fur,light,10);
+        for(int side: {-1,1})p.blob(side*13,-11+(side<0?stride:-stride),4,6,fur);
+        catEar(p,-1,-39,9,14,fur,light,{214,151,153,255});catEar(p,1,-39,9,14,fur,light,{214,151,153,255});
+        p.blob(0,-24,16,12,fur);p.oval(-3,-29,11,4,light);
+        p.r(-2,-34,4,5,shade);p.r(-12,-29,5,2,shade);p.r(8,-29,5,2,shade);
+        brightEyes(p,0,-26,7,blink,{145,162,112,255},0,charging);
+        for(int side: {-1,1}) {
+            p.line(side*3,-29,side*12,-29,1,light);
+            for(int row=-1;row<=1;row++) {
+                int end=30+(charging?3:0),wobble=int(std::sin(time*3+row)*1.5f);
+                p.line(side*10,-20+row*2,side*end,-19+row*7+wobble,2,EnemyInk);
+                p.line(side*10,-21+row*2,side*end,-20+row*7+wobble,1,Gold);
+                p.r(side*end-1,-22+row*7+wobble,2,2,light);
+            }
         }
-        for(int side:{-1,1}) {
-            DrawRectangle(int(p.x+side*44-8),int(p.y-120),17,22,outline);
-            DrawRectangle(int(p.x+side*44-4),int(p.y-115),9,18,light);
-            DrawRectangle(int(p.x+side*28-10),int(p.y-99),20,7,{174,127,92,255});
-        }
+        kittyMuzzle(p,0,-18,light,charging);
+        p.r(-9,-12,18,4,{136,99,159,255});p.r(-3,-9,6,5,Gold);p.r(-1,-8,2,3,{183,135,76,255});
+        p.r(-7,-34,14,2,Gold);p.r(-2,-37,5,5,Gold);p.r(0,-37,3,3,fur);
     }
-    for(int side:{-1,1}) {
-        DrawRectangle(int(p.x+side*25-8),int(p.y-66),16,21,outline);
-        DrawRectangle(int(p.x+side*25-5),int(p.y-65),5,7,WHITE);
-        DrawRectangle(int(p.x+side*43-8),int(p.y-40),17,7,Pink);
-        DrawRectangle(int(p.x+side*31-13),int(p.y-11),26,11,outline);
-        DrawRectangle(int(p.x+side*31-9),int(p.y-10),18,7,light);
-    }
-    DrawRectangle(int(p.x-6),int(p.y-44),12,6,outline);
-    DrawRectangle(int(p.x-2),int(p.y-38),4,7,outline);
-    if(enemy.flash>0)pixelRing(add(p,{0,-55}),62,Fade(Pink,0.8f),4,26);
-    if(enemy.poisonLeft>0)pixelRing(enemy.pos,62,Fade(Green,0.55f),3,30);
+    if(enemy.flash>0)pixelRing(add(p.feet,{0,-55}),66,Fade(Pink,.8f),3,26);
+    if(enemy.poisonLeft>0)pixelRing(enemy.pos,62,Fade(Green,.55f),3,30);
+    (void)clock;
 }
 Color shotColor(ShotKind kind) {
     switch(kind) {
@@ -155,44 +421,56 @@ Color shotColor(ShotKind kind) {
     }
 }
 void drawShot(const Projectile& shot,float clock) {
-    const Vector2 p=shot.pos,back=mul(unit(shot.velocity),-1);
-    const Color color=shotColor(shot.kind);
-    for(int n=1;n<5;++n)pixel(add(p,mul(back,n*7.0f)),std::max(2,6-n),Fade(color,0.4f-n*0.06f));
+    Vector2 p=shot.pos,back=mul(unit(shot.velocity),-1);
+    Color color=shotColor(shot.kind);
+    for(int n=1;n<5;++n)pixel(add(p,mul(back,n*7.0f)),std::max(2,6-n),Fade(color,.4f-n*.06f));
+    CreaturePaint paint;paint.feet=p;
     switch(shot.kind) {
     case ShotKind::Heart:heart(p,2.0f,color);break;
     case ShotKind::Venom:
-        DrawRectangle(int(p.x-7),int(p.y-6),14,12,{64,101,57,255});
-        DrawRectangle(int(p.x-5),int(p.y-8),10,16,color);
-        DrawRectangle(int(p.x-8),int(p.y-4),16,8,color);
-        DrawRectangle(int(p.x-4),int(p.y-5),4,4,{229,255,196,255});
-        pixel(add(p,{5,9}),3,Fade(color,0.8f));break;
+        paint.blob(0,0,4,4,color,{62,98,54,255});
+        paint.oval(-1,-1,2,2,{205,244,161,255});paint.r(-1,-2,1,1,EnemyCream);
+        paint.r(3,3,1,2,color);paint.r(-3,4,2,1,{111,176,86,255});
+        break;
     case ShotKind::Digital:
-        DrawRectangleLinesEx({p.x-7,p.y-7,14,14},2,color);
-        DrawRectangle(int(p.x-2),int(p.y-2),5,5,WHITE);
-        pixel(add(p,{-11,5}),3,color);pixel(add(p,{8,-10}),3,color);break;
-    case ShotKind::Whisker: {
-        Vector2 direction=unit(shot.velocity);if(length(direction)<0.1f)direction={1,0};
-        DrawLineEx(sub(p,mul(direction,12)),add(p,mul(direction,12)),6,{133,92,68,255});
-        DrawLineEx(sub(p,mul(direction,11)),add(p,mul(direction,11)),3,color);
-        sparkle(p,{255,242,205,255},2);break;
+        paint.r(-4,-4,8,1,Cyan);paint.r(-4,3,8,1,Cyan);
+        paint.r(-4,-3,1,6,Cyan);paint.r(3,-3,1,6,Cyan);
+        paint.r(-1,-1,3,3,WHITE);paint.r(-6,2,2,2,Cyan);paint.r(4,-5,2,2,Cyan);
+        break;
+    case ShotKind::Whisker:
+        paint.rotation=std::atan2(shot.velocity.y,shot.velocity.x);
+        paint.line(-7,1,-3,-1,2,{132,94,67,255});paint.line(-3,-1,3,-1,2,{132,94,67,255});
+        paint.line(3,-1,7,-3,2,{132,94,67,255});
+        paint.line(-7,0,-3,-2,1,Gold);paint.line(-3,-2,3,-2,1,EnemyCream);
+        paint.line(3,-2,7,-4,1,Gold);paint.r(-8,-1,2,1,Gold);
+        break;
+    case ShotKind::Moon: {
+        float radius=std::max(3.0f,shot.radius*.5f);
+        Color shade{62,41,88,255};
+        paint.blob(0,0,radius,radius,color,shade);
+        paint.oval(2,-1,radius-.5f,radius-.5f,shade);
+        paint.r(-4,-4,1,2,{234,211,255,255});paint.r(-5,-3,3,1,{234,211,255,255});
+        break;
     }
-    case ShotKind::Moon:
-        DrawCircleV(p,shot.radius+2,{62,41,88,255});
-        DrawCircleV(p,shot.radius,color);
-        DrawCircleV(add(p,{4,-2}),shot.radius-1,{62,41,88,255});
-        sparkle(add(p,{-7,-7}),{234,211,255,255},1);break;
     case ShotKind::Spore:
-        DrawRectangle(int(p.x-8),int(p.y-6),16,12,{80,103,56,255});
-        DrawRectangle(int(p.x-6),int(p.y-8),12,16,color);
-        pixel(add(p,{-3,-4}),3,{246,245,198,255});pixel(add(p,{3,2}),3,{246,245,198,255});break;
+        // A fleck of fluff suspended in a cute, olive-colored sneeze.
+        paint.blob(0,0,4,3,{174,194,116,255},{78,101,58,255});
+        paint.oval(-1,-1,2,1,{225,228,164,255});paint.r(-3,-4,1,2,{114,115,81,255});
+        paint.r(1,-5,1,2,{114,115,81,255});paint.r(2,-4,2,1,{114,115,81,255});
+        paint.r(3,2,1,3,{152,183,111,255});paint.r(-2,0,1,1,{107,133,77,255});
+        paint.r(1,1,1,1,{107,133,77,255});
+        break;
     case ShotKind::Fluff:
-        DrawRectangle(int(p.x-9),int(p.y-5),18,10,{163,128,160,255});
-        DrawRectangle(int(p.x-6),int(p.y-9),12,18,color);
-        DrawRectangle(int(p.x-8),int(p.y-6),16,12,color);
-        sparkle(p,{255,246,248,255},2);break;
+        paint.blob(0,0,4,4,{225,194,209,255},{133,105,141,255});
+        paint.rotation=clock*4;
+        paint.r(-5,-2,2,2,{166,133,163,255});paint.r(2,-5,2,2,{225,194,209,255});
+        paint.r(3,3,2,2,{166,133,163,255});paint.r(-3,3,2,2,{225,194,209,255});
+        paint.line(-2,-1,0,-2,1,{251,225,226,255});paint.line(0,-2,2,0,1,{251,225,226,255});
+        paint.r(-1,1,2,1,{166,133,163,255});
+        break;
     }
-    if(int(clock*8)%2)sparkle(add(p,{9,-11}),Fade(color,0.7f),1);
 }
+
 }
 
 void drawCharacter(const Artwork& art,int row,int pose,Vector2 feet,float height,bool flip,Color tint) {
@@ -327,9 +605,9 @@ void drawEffects(const Game& game,const Artwork& art) {
             }
         } else {
             const Enemy& enemy=game.enemies[actor.index];
-            if(!enemy.boss) {littleEnemy(enemy,clock);continue;}
+            if(!enemy.boss) {littleEnemy(enemy,clock,game.preferences.reducedMotion);continue;}
             int pose=enemy.flash>0?4:enemy.windup>0?3:enemy.cooldown>0?step:0;
-            if(enemy.kind==EnemyKind::PillowBoss||enemy.kind==EnemyKind::WhiskerBoss)plushBoss(enemy,clock);
+            if(enemy.kind==EnemyKind::PillowBoss||enemy.kind==EnemyKind::WhiskerBoss)plushBoss(enemy,clock,game.preferences.reducedMotion);
             else if(enemy.kind==EnemyKind::WikermanBoss) {
                 pixelRing(enemy.pos,56,Fade(Green,0.4f),4,32);
                 drawCharacter(art,1,pose,enemy.pos,132,game.player.x<enemy.pos.x,enemy.flash>0?Pink:Color{190,220,182,255});

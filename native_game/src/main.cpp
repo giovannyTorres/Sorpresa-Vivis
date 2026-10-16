@@ -260,7 +260,8 @@ int main(int argc,char** argv) {
             BeginMode2D(camera); drawWorld(app.game); drawEffects(app.game,art); EndMode2D();
             drawHud(app.game,art);
             if(app.game.screen==Screen::Playing&&app.game.transitionTime>0)
-                DrawRectangle(0,145,Width,535,Fade(BLACK,app.game.transitionTime/0.45f));
+                DrawRectangle(0,145,Width,535,Fade(BLACK,app.game.transitionPending?
+                    std::clamp(app.game.transitionTime/.14f,0.0f,1.0f)*.10f:app.game.transitionTime/.45f));
         }
         if(app.game.screen!=Screen::Playing) hover=drawMenu(app.game,art,app.game.screen,app.selected,mouse,
             app.mouseActive&&inside(mouse,{0,0,float(Width),float(Height)}),uiTime,app.gallery);
