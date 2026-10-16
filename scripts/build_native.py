@@ -210,8 +210,8 @@ def windows_resource(compiler: str, environment: dict[str, str]) -> list[str]:
     resource = generated / "game.rc"
     resource.write_text('1 ICON "' + str(ico).replace("\\", "/") + '"\n' + '''
 1 VERSIONINFO
- FILEVERSION 0,3,0,0
- PRODUCTVERSION 0,3,0,0
+ FILEVERSION 0,4,0,0
+ PRODUCTVERSION 0,4,0,0
  FILEFLAGSMASK 0x3fL
  FILEFLAGS 0x0L
  FILEOS 0x40004L
@@ -224,8 +224,8 @@ BEGIN
   BEGIN
    VALUE "FileDescription", "Sorpresa Vivis - Aventura 2D\\0"
    VALUE "ProductName", "Sorpresa Vivis\\0"
-   VALUE "FileVersion", "0.3.0\\0"
-   VALUE "ProductVersion", "0.3.0\\0"
+   VALUE "FileVersion", "0.4.0\\0"
+   VALUE "ProductVersion", "0.4.0\\0"
    VALUE "InternalName", "Sorpresa-Vivis\\0"
    VALUE "OriginalFilename", "Sorpresa-Vivis.exe\\0"
   END
@@ -269,28 +269,30 @@ def test() -> None:
     include, archive = library("linux")
     BUILD.mkdir(parents=True, exist_ok=True)
     executable = BUILD / "model-tests"
-    model = [ROOT / "native_game/src/game.cpp"]
-    profile = ROOT / "native_game/src/profile.cpp"
-    if profile.exists():
-        model.append(profile)
+    model = [ROOT / "native_game/src" / name for name in ("game.cpp", "combat.cpp", "profile.cpp")]
     run([os.environ.get("CXX", "g++"), "-std=c++17", "-O1", "-g", "-Wall", "-Wextra", "-I", str(include), "-I", str(ROOT / "native_game/src"), *map(str, sources), *map(str, model), str(archive), *LINUX_LIBS, "-o", str(executable)])
     run([str(executable)])
 
 
-INSTRUCTIONS = """SORPRESA VIVI’S — AVENTURA 2D PARA PC
+INSTRUCTIONS = """SORPRESA VIVI’S — AVENTURA 2D PARA PC — 0.4.0
 
 Windows: descomprime todo y abre Sorpresa-Vivis.exe.
 Linux: descomprime y ejecuta ./Sorpresa-Vivis; si hace falta, chmod +x Sorpresa-Vivis.
 Incluye personajes, escenarios, tipografías y sonido en un solo ejecutable.
 Funciona sin Internet. No necesitas instalar un motor de videojuegos.
 
-WASD / flechas: mover. Espacio (mantener): magia al enemigo más cercano.
-E / Enter: ayuda de Wiky e interacción. Shift: esquivar.
+WASD: mover. Flechas: apuntar y disparar en esa dirección.
+Ratón: apuntar; clic izquierdo (mantener): disparar.
+Espacio (mantener): disparar automáticamente al enemigo más cercano.
+E / Enter: ayuda de Wisky e interacción. Shift / L: esquivar.
+Tab: mapa. I: objetos y mejoras.
 Esc: pausa / volver. R: reintentar. M: sonido. F11: pantalla completa.
 Los menús funcionan con ratón o flechas y Enter.
+Mando: stick izquierdo / cruceta para mover, stick derecho para apuntar y disparar.
 
-Recoge el cascabel, elimina las pelusas y busca la salida del escenario.
-La partida guarda un punto de control al avanzar; continúa desde el menú.
+Explora cuatro pisos de salas generadas, vence enemigos y elige recompensas.
+Recoge monedas, combina mejoras y encuentra el Churu.
+Continuar recupera tu partida completa: salas, salud, objetos y progreso.
 Consulta los controles y ajustes dentro del juego.
 
 Windows: equipo de 64 bits con OpenGL 3.3. Compatible con Windows 10/11.

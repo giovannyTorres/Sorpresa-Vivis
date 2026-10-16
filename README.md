@@ -1,74 +1,99 @@
 # Sorpresa Vivis
 
-**Aventura 2D para PC — versión nativa 0.3.0 en C++17 y raylib.**
+**Aventura roguelite 2D para PC · C++17 y raylib · versión 0.4.0.**
 
-Vivi y Wiky atraviesan la Pradera de Bigotes y el Sendero del Umbral para derrotar a Maliketh y rescatar a Giovanny. Tres escenarios, magia de corazones, una gata lunar y un final completo.
+Vivi y Wisky recorren habitaciones conectadas para recuperar a sus amigos. Cada partida genera cuatro pisos distintos: **Pachonidad**, **Bigotes Encontrados**, **El alter ego de Wiky** y **Refugio de Maliketh**. Explora, esquiva, elige mejoras y baja al siguiente piso. La estructura se inspira en los juegos de mazmorras por habitaciones, con personajes, arte y música propios y un tono tierno.
 
 ## Jugar
 
-**Windows 10/11 de 64 bits:** descomprime `Sorpresa-Vivis-Native-Windows.zip` y abre **Sorpresa-Vivis.exe**. El arte, fuentes y sonido están integrados en ese ejecutable. No necesita instalar Godot, Python, raylib ni descargar archivos al jugar.
+**Windows 10/11 de 64 bits:** descomprime `Sorpresa-Vivis-Native-Windows.zip` y abre **Sorpresa-Vivis.exe**.
 
-**Linux de 64 bits:** descomprime `Sorpresa-Vivis-Native-Linux.zip`, da permiso con `chmod +x Sorpresa-Vivis` si hace falta y abre `./Sorpresa-Vivis`. Requiere un escritorio X11, OpenGL 3.3 y glibc 2.38 o posterior.
+**Linux de 64 bits:** descomprime `Sorpresa-Vivis-Native-Linux.zip`, ejecuta `chmod +x Sorpresa-Vivis` si hace falta y abre `./Sorpresa-Vivis`. Requiere X11, OpenGL 3.3 y glibc 2.38 o posterior.
 
-El juego funciona sin conexión. Los menús aceptan ratón, teclado y mando. Puedes cambiar el volumen, pantalla completa, movimiento reducido y modo tranquilo dentro de **Ajustes**.
+Todo el arte, tipografía y audio está integrado en el ejecutable. Funciona sin Internet y sin instalar un motor de videojuegos. Los menús aceptan teclado, ratón y mando. Ajustes incluye volumen, silencio, pantalla completa, movimiento reducido y modo tranquilo.
 
-| Acción | Teclado | Mando |
+| Acción | Teclado y ratón | Mando |
 | --- | --- | --- |
-| Mover | WASD / flechas | Stick izquierdo / cruceta |
-| Magia de corazones | Espacio, mantener | A / botón inferior, mantener |
-| Magia de Wiky / rescatar | E o Enter | X / botón izquierdo |
+| Mover | WASD | Stick izquierdo / cruceta |
+| Apuntar y disparar | Flechas, o mantener clic izquierdo | Stick derecho |
+| Disparo al enemigo visible más cercano | Mantener Espacio | Mantener A / botón inferior |
+| Veneno de Wisky / interactuar | E o Enter | X / botón izquierdo |
 | Esquivar | Mayús o L | B / botón derecho |
-| Pausa | Esc | Start |
-| Reintentar tras derrota | R o botón del menú | A |
-| Pantalla completa | F11 | Ajustes |
-| Activar/desactivar sonido | M | Ajustes |
+| Mapa completo | TAB | Select / Back |
+| Inventario y estadísticas | I | — |
+| Elegir premio | Flechas y Enter, 1–3 o ratón | Cruceta y A |
+| Pausa / volver / cerrar panel | Esc | Start |
+| Nueva partida tras derrota | R o botón del menú | A |
+| Pantalla completa / silencio | F11 / M | Ajustes |
 
-La magia apunta al enemigo visible más cercano. Recoge el cascabel y despeja cada lugar para abrir la salida de la derecha. En la torre, el cascabel rompe el escudo de Maliketh. Cuando se rinda, acércate a Giovanny y pulsa E. La esquiva protege durante un instante y recarga en 2 segundos; Wiky alcanza a los enemigos cercanos y recarga en 5. Los corazones recuperan vida.
+## Habitaciones y recompensas
 
-## Tu progreso
+Cada piso contiene entre **8 y 11 habitaciones** conectadas, con distribución, encuentros, obstáculos y premios aleatorios. El minimapa muestra las salas descubiertas y las puertas pendientes; TAB abre el mapa con leyenda. Las puertas se sellan durante el combate y se abren cuando desaparecen los enemigos. Una sala despejada permanece despejada al volver.
 
-La partida guarda automáticamente **el inicio de cada zona**. Al volver, **Continuar** te deja en esa zona con la vida restaurada; no conserva los enemigos eliminados dentro de ella. Si pierdes, puedes repetir la misma zona. Los ajustes también se guardan. Al completar el rescate se cierra esa partida y puedes comenzar otra.
+- **Encuentros:** enemigos, monedas y posibles corazones.
+- **Tesoro:** elige una de tres mejoras gratuitas en el pedestal central.
+- **Tienda:** compra una de tres mejoras con las monedas de la partida.
+- **Descanso:** recupera toda la vida y recibe un escudo para esa sala.
+- **Desafío:** combate más exigente, más monedas y un objeto garantizado.
+- **Guardián:** cálmalo, recoge tu mejora y usa la escalera para bajar. Recuperas un punto de vida al cambiar de piso.
 
-En Windows el perfil está en `%LOCALAPPDATA%/SorpresaVivis/profile.txt`. En Linux está en `$XDG_DATA_HOME/sorpresa-vivis/` o `~/.local/share/sorpresa-vivis/`. Se conserva una copia del perfil anterior para recuperar un guardado dañado.
+Hay **14 objetos**, incluidos daño, velocidad, cadencia, disparo múltiple, más vida máxima, curación, vidas extra, escudos y suerte. Wisky tiene mejoras de veneno, frecuencia de ataque, alcance, recarga y nube ponzoñosa. El **Chip de Giovanny** invoca una proyección digital que ayuda a disparar. I permite consultar los objetos y las estadísticas actuales.
 
-## Personajes y dirección visual
+Wisky ataca automáticamente con **veneno verde**. Su acción E envenena a los enemigos cercanos; la nube deja daño persistente si tienes ese objeto. La esquiva protege brevemente y recarga en 1.6 segundos. Puedes moverte y disparar en direcciones independientes, o usar Espacio para apuntado automático.
 
-Los diseños siguen la referencia aportada: Vivi con lentes, cabello castaño y sudadera rosa; Wiky como gato blanco y negro de ojos amarillos; Giovanny con lentes, barba, mochila y ropa verde; Maliketh como gata siamesa de ojos azules, pañuelo violeta y dije lunar. La galería permite ver sus animaciones, personalidad y magia.
+Los ocho tipos de enemigos tienen comportamientos distintos: persecución, saltos, disparos, embestidas, órbitas, esporas y ecos. Los cuatro guardianes combinan ataques y cambian de patrón al perder vida. Las señales en el suelo anuncian saltos, cargas y zonas peligrosas antes de activarse.
 
-Hay poses de reposo, movimiento, magia, daño y victoria, retratos, una nueva ilustración de portada e icono propio. Los escenarios incorporan vegetación, agua, ruinas, ventanas lunares, antorchas y profundidad. El combate añade destellos, estelas, aviso del ataque de Maliketh y feedback de daño; movimiento reducido atenúa esos efectos.
+## Amigos y final
 
-![Portada de la versión nativa](docs/previews/native-menu.png)
+**Vivi** lleva lentes, cabello castaño y sudadera rosa, y dispara corazones. **Wisky** es el gato blanco y negro de ojos amarillos, ponzoñoso. **Giovanny** tiene piel clara, pelo negro lacio, barba y lentes; su poder es digital, de color cian. **Maliketh** es una siamesa tabby point muy clara y pachona, de ojos azules, pañuelo violeta y luna dorada.
 
-![Magia y combate en la versión nativa](docs/previews/native-combate.png)
+En el tercer piso, **Wiky Wikerman, el asesino de wiskys**, toma el control de Wisky. Vencer al alter ego lo recupera como compañero y fortalece su veneno. En el último piso, Maliketh deja un **churu garantizado** al rendirse. Recógelo y ofréceselo con E: se vuelve tu amiga, abre la jaula y puedes acercarte a Giovanny para rescatarlo.
+
+Cada piso tiene música original propia, con un arreglo más intenso para su jefe. El churu cambia la música de Maliketh a una resolución cálida. La galería incluye retratos y poses de reposo, movimiento, magia, daño y victoria.
+
+![La aventura](docs/previews/native-menu.png)
+
+![Combate y veneno de Wisky](docs/previews/native-combate.png)
+
+![Habitaciones y mapa del piso](docs/previews/native-mapa.png)
+
+## Guardado
+
+**Continuar** restaura la partida completa: semilla, piso, habitación, mapa, enemigos, vida, monedas, objetos y mejoras. Se guarda al viajar, limpiar salas, recoger premios y al cerrar el juego. Hay copia de respaldo del perfil anterior.
+
+Una vida extra te revive con toda la vida y conserva tus objetos. Si pierdes sin vidas extra, esa partida termina: **Reintentar** comienza una nueva aventura aleatoria. Los ajustes se conservan. Los perfiles de la antigua versión lineal migran sus preferencias; sus checkpoints no representan el nuevo mapa.
+
+Windows: `%LOCALAPPDATA%/SorpresaVivis/profile.txt`. Linux: `$XDG_DATA_HOME/sorpresa-vivis/profile.txt` o `~/.local/share/sorpresa-vivis/profile.txt`.
 
 ## Compilar y verificar
 
-La versión principal está en **`native_game/`**. El proyecto Godot y el prototipo web se conservan como referencia; el ejecutable nativo no depende de ellos. Sus atlas y la fuente se comparten desde `godot_game/playable/assets/` durante la compilación.
+La versión principal está en **`native_game/`**. Godot y el prototipo web se conservan como referencias anteriores. Los atlas y la fuente se toman de `godot_game/playable/assets/` al compilar.
 
-En Linux x86-64, con Python 3.9+, g++, `dpkg-deb` y las bibliotecas de escritorio X11/OpenGL:
+En Linux x86-64, con Python 3.9+, g++, `dpkg-deb` y bibliotecas de escritorio X11/OpenGL:
 
 ```bash
 python3 scripts/build_native.py --bootstrap --platform all --test
 ```
 
-La primera compilación descarga raylib 5.5 y, si falta, un compilador MinGW portable para Windows. Las descargas están fijadas por versión y SHA256. No instala paquetes del sistema ni requiere permisos de administrador. Para las siguientes compilaciones sin red:
+El helper descarga raylib 5.5 y, si falta, MinGW portable. Versiones y SHA256 están fijados; no instala paquetes del sistema. Después se puede compilar sin red:
 
 ```bash
 python3 scripts/build_native.py --platform all --test
 ```
 
-Los binarios quedan en `build/native/{windows,linux}/` y los ZIP con instrucciones y licencias en `dist/`. Puedes compilar solo una plataforma con `--platform windows` o `--platform linux`. La dependencia portable de MinGW necesita un host Linux compatible con Debian 13; consulta las variables de override y licencias en [THIRD_PARTY.md](native_game/THIRD_PARTY.md).
+Binarios: `build/native/{windows,linux}/`. Paquetes con instrucciones y licencias: `dist/`. También se puede usar `--platform windows` o `--platform linux`. El bootstrap de MinGW necesita un host compatible con Debian 13; [THIRD_PARTY.md](native_game/THIRD_PARTY.md) documenta dependencias y overrides.
 
-Las **46 pruebas** comprueban movimiento, colisiones, esquiva, combate, pausa, derrota, curación, checkpoints, escudo, rescate, un recorrido completo y recuperación del perfil. Se revisaron las diez pantallas de la aplicación en Linux y se ejecutó el binario Windows con Wine 10, incluyendo captura de esas pantallas. La entrada de mando está implementada; no se probó con un dispositivo físico en este entorno. Para probar el arranque gráfico en un escritorio:
+Las pruebas del modelo cubren generación conectada y reproducible, viajes, recompensas, veneno, colisiones, vida extra, recuperación de Wisky, churu, rescate y persistencia. El programa ofrece comprobaciones gráficas sin modificar el perfil personal:
 
 ```bash
 build/native/linux/Sorpresa-Vivis --smoke-test
-```
-
-Para capturar las diez pantallas principales y cerrar automáticamente:
-
-```bash
 build/native/linux/Sorpresa-Vivis --capture /tmp/vivis-preview
 ```
 
-Pixelify Sans se distribuye con su licencia OFL. Raylib y su licencia acompañan cada ZIP. El mapa de archivos de la implementación es: `game.cpp` (reglas), `main.cpp` (ventana, entrada y sonido), `profile.cpp` (guardado), `characters.cpp` (sprites y magia), `world.cpp` (escenarios) e `interface.cpp` (menús y HUD).
+Validación de esta versión: **55 escenarios** del modelo pasan, también con ASAN, UBSAN e iteradores de depuración; **400 mapas** conectados y **100 finales** con churu garantizado. La auditoría de accesibilidad y guardado cubrió **3,800 habitaciones**. La prueba real de teclado y ratón pasó **46 comprobaciones**, incluidas cinco reaperturas y conservación exacta del perfil. Windows se comprobó con Wine 10.
+
+El segundo comando captura veinte escenas y termina automáticamente. La entrada de mando está implementada; la validación en este entorno no incluye un mando físico.
+
+Código: `game.cpp` (mapas, progresión y objetos), `combat.cpp` (enemigos, veneno y proyectiles), `audio.cpp` (música y efectos), `profile.cpp` (guardado), `main.cpp` (ventana y entrada), `characters.cpp` (actores y efectos), `world.cpp` (salas) e `interface.cpp` (menús, mapa y HUD).
+
+Pixelify Sans incluye licencia OFL. Raylib y su licencia acompañan cada ZIP. Arte generado y música original del proyecto.

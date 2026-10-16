@@ -24,6 +24,10 @@ Palette palette(int stage) {
         rgb(0x3f5757),rgb(0x698474),rgb(0x34564f),rgb(0x5b786b),rgb(0x213d3e),
         rgb(0x4f4544),rgb(0x837064),rgb(0x51515b),rgb(0x393d48),rgb(0x74737a),
         rgb(0x60616d),rgb(0x919098),rgb(0xb394cf),rgb(0x9ce0df)};
+    if(stage==2) return {rgb(0x101a28),rgb(0x202f3c),rgb(0x172430),rgb(0x2a3949),
+        rgb(0x3e5264),rgb(0x6b9aab),rgb(0x29465b),rgb(0x567c88),rgb(0x1c3445),
+        rgb(0x3a4052),rgb(0x7292a7),rgb(0x314658),rgb(0x233441),rgb(0x618195),
+        rgb(0x435567),rgb(0x7792a4),rgb(0x79c8ee),rgb(0x98ded5)};
     return {rgb(0x131421),rgb(0x302d43),rgb(0x252334),rgb(0x39334b),
         rgb(0x494057),rgb(0x74607e),rgb(0x44324e),rgb(0x775576),rgb(0x30253b),
         rgb(0x524051),rgb(0x9d7c91),rgb(0x514457),rgb(0x342c42),rgb(0x80637e),
@@ -174,120 +178,6 @@ void treeBorders(const Palette& p,int stage) {
     }
 }
 
-bool clearDecoration(Vector2 point,const Game& game,float margin=20) {
-    if(point.y>366&&point.y<479) return false;
-    if(point.x>1110&&point.y>320&&point.y<490) return false;
-    if(distance(point,game.bell)<38) return false;
-    for(auto obstacle:game.obstacles) if(inside(point,grow(obstacle,margin))) return false;
-    for(auto heart:game.hearts) if(distance(point,heart)<25) return false;
-    return true;
-}
-void ground(const Game& game,const Palette& p) {
-    rect(Field,p.soil);
-    // Broad clusters create worn and mossy areas; the center remains easy to read.
-    for(int i=0;i<42;i++) {
-        Vector2 point{float(88+number(i,3,game.stage,1096)),float(182+number(i,7,game.stage,439))};
-        if(!clearDecoration(point,game,15)) continue;
-        int radius=19+number(i,9,4,25);
-        oval(point.x,point.y,radius,radius*.43f,i%3==0?p.shade:p.moss,4);
-        if(i%3==0) oval(point.x-6,point.y-5,radius*.7f,4,p.moss,3);
-    }
-    for(int i=0;i<115;i++) {
-        Vector2 point{float(80+number(i,2,game.stage+2,1120)),float(181+number(i,4,game.stage+2,449))};
-        if(!clearDecoration(point,game)) continue;
-        if(i%6==0) {
-            tuft(point.x-7,point.y+3,p,i); tuft(point.x+9,point.y-2,p,i+1);
-        } else if(i%3==0) {
-            rect(point.x,point.y,6,2,p.grass); rect(point.x+9,point.y+4,4,2,p.moss);
-        } else tuft(point.x,point.y,p,i);
-    }
-    for(int i=0;i<30;i++) {
-        Vector2 point{float(100+number(i,6,game.stage,1030)),float(204+number(i,12,game.stage,408))};
-        if(!clearDecoration(point,game,30)) continue;
-        if(i%7==0) stone(point.x,point.y,2,p,i);
-        else if(i%5==0) mushrooms(point.x,point.y,p);
-        else {
-            flower(point.x,point.y,i%2?p.flower:p.glow,p,i);
-            if(i%3==0) flower(point.x+13,point.y+7,p.flower,p,i+1);
-        }
-    }
-}
-
-void branchPath(const Game& game,const Palette& p) {
-    if(game.stage>=2) return;
-    float destination=game.bell.y;
-    int start=int(std::min(destination,422.0f)),end=int(std::max(destination,422.0f));
-    for(int y=start;y<end;y+=8) {
-        int wobble=number(y,8,game.stage,3)*2-2;
-        rect(game.bell.x-24+wobble,y,48,8,p.pathShade);
-        rect(game.bell.x-19+wobble,y,38,8,p.path);
-        if(y%24==0) rect(game.bell.x-8,y+2,6,2,p.pathLight);
-    }
-    oval(game.bell.x,destination,35,17,p.pathShade,3);
-    oval(game.bell.x,destination,31,14,p.path,3);
-}
-void mainPath(const Game& game,const Palette& p) {
-    branchPath(game,p);
-    for(int x=64;x<1216;x+=12) {
-        int wobble=number(x,1,18,4)-2;
-        rect(x,380+wobble,12,82,p.shade);
-        rect(x,384+wobble,12,74,p.pathShade);
-        rect(x,389+wobble,12,65,p.path);
-        if(x%3==0) rect(x,385+wobble,7,3,p.grass);
-        if(x%5==0) rect(x+4,455+wobble,6,3,p.grass);
-    }
-    for(int i=0;i<88;i++) {
-        int x=76+number(i,5,9,1125),y=395+number(i,6,9,48);
-        rect(x,y,4+number(i,7,2,6),2,i%4==0?p.pathLight:p.pathShade);
-    }
-    if(game.stage==1) {
-        for(int i=0;i<21;i++) {
-            int x=91+i*52,y=405+number(i,4,7,16);
-            rect(x-2,y-2,35,18,Ink); rect(x,y,32,15,p.stone);
-            rect(x+2,y+1,27,2,p.stoneLight); rect(x+7,y+12,24,2,p.pathShade);
-        }
-    }
-}
-
-void stream(float time,const Palette& p) {
-    for(int y=160;y<653;y+=4) {
-        int bend=int(std::sin(float(y)*.013f)*8)/2*2;
-        float x=620+bend;
-        rect(x-29,y,58,4,p.shade); rect(x-25,y,50,4,rgb(0x465b42));
-        rect(x-20,y,40,4,rgb(0x1d404b)); rect(x-15,y,30,4,rgb(0x2c5c66));
-        rect(x-7,y,16,4,rgb(0x306a73));
-        if(y%28==0) {
-            rect(x-17,y,9,2,rgb(0x75917e));
-            int drift=int(time*3+y)%3*2;
-            rect(x-6+drift,y+1,13,2,rgb(0x5e9699));
-        }
-    }
-    for(int i=0;i<9;i++) {
-        int y=190+i*50;
-        if(y>360&&y<485) continue;
-        float side=i%2?1.f:-1.f;
-        tuft(620+side*31,y,p,i);
-        stone(620+side*30,y+12,1,p,i);
-        if(i%3==0) flower(620-side*33,y+4,p.flower,p,i);
-    }
-}
-void bridge() {
-    // Planks run across the shallow stream. This bridge adds no artificial collision.
-    rect(578,384,91,78,Ink);
-    for(int x=581;x<667;x+=9) {
-        rect(x,387,8,72,rgb(0x805f42)); rect(x+1,389,2,67,rgb(0xb28a59));
-        rect(x+4,399+(x%3)*7,2,31,rgb(0x624a36));
-        rect(x+3,392,2,2,Ink); rect(x+3,452,2,2,Ink);
-    }
-    for(int y: {381,461}) {
-        rect(574,y,101,7,rgb(0x342a27)); rect(576,y,97,3,rgb(0xc29b64));
-        for(int x: {574,665}) {
-            rect(x,y-6,10,17,Ink); rect(x+2,y-5,6,15,rgb(0x77563b));
-            rect(x+2,y-5,6,3,rgb(0xc6a570));
-        }
-    }
-}
-
 void pond(Rectangle area,const Palette& p,float time,int seed) {
     // Rock beds fill the collision bounds; irregular shorelines soften the silhouette.
     const std::array<int,18> left{{9,5,3,1,0,0,1,0,0,1,2,0,1,2,3,6,7,10}};
@@ -362,90 +252,6 @@ void ruin(Rectangle area,const Palette& p,int seed) {
     diamond(centerX,centerY,4,rgb(0x3f4653),2);
 }
 
-void mist(const Game& game,const Palette& p) {
-    float time=game.preferences.reducedMotion?0:game.time;
-    const std::array<Vector2,4> patches{{{260,241},{803,568},{183,612},{950,198}}};
-    for(size_t i=0;i<patches.size();i++) {
-        float drift=int(std::sin(time*.09f+float(i)*2)*15)/3*3;
-        Vector2 point{patches[i].x+drift,patches[i].y};
-        oval(point.x,point.y,160,14,opacity(p.glow,5),4);
-        oval(point.x+42,point.y-5,107,9,opacity(p.glow,6),3);
-        oval(point.x-55,point.y+5,108,6,opacity(p.glow,5),3);
-        rect(point.x-61,point.y-2,67,2,opacity(p.glow,5));
-    }
-}
-
-void forestDetails(const Game& game,const Palette& p) {
-    treeBorders(p,game.stage);
-    // Mossy perimeter stones and roots make the forest edge solid and readable.
-    for(int x=70;x<1210;x+=38) {
-        if(x>590&&x<655&&game.stage==0) continue;
-        rect(x,651,30,5,p.shade); rect(x+2,653,24,2,p.moss);
-        if(number(x,0,4,4)==0) tuft(x+10,648,p,x);
-    }
-    if(game.stage==1) {
-        for(int x: {123,420,828,1050}) {
-            rect(x,153,69,15,rgb(0x323a44));
-            for(int i=0;i<3;i++) {
-                int height=9+(i%2)*8;
-                rect(x+i*24,151-height,21,height+8,p.stone);
-                rect(x+i*24+1,151-height,18,3,p.stoneLight);
-                rect(x+i*24+4,151-height+3,5,4,p.leafShade);
-            }
-        }
-        mist(game,p);
-    }
-}
-
-void gate(const Game& game,const Palette& p) {
-    constexpr Rectangle opening{1150,350,66,120};
-    bool open=game.gateOpen();
-    softLight({1181,410},72,open?p.glow:p.flower);
-    rect(1142,339,82,140,Ink);
-    rect(1147,344,72,132,rgb(0x686a54));
-    rect(opening,open?rgb(0x142b30):rgb(0x34303b));
-    for(int x: {1144,1212}) {
-        rect(x,341,9,137,rgb(0x7d795b)); rect(x+1,344,3,130,rgb(0xb6ab7b));
-        for(int y=356;y<472;y+=20) rect(x,y,9,2,rgb(0x454c40));
-        tuft(x-2,479,p,x);
-    }
-    rect(1144,338,77,11,rgb(0x868262)); rect(1148,339,69,3,rgb(0xc9ba8a));
-    rect(1156,335,54,4,rgb(0x535744));
-    if(open) {
-        for(int i=0;i<4;i++) rect(1157+i*4,355+i*6,51-i*8,108-i*12,opacity(p.glow,15+i*9));
-        rect(1169,408,17,4,rgb(0xdfedb3)); rect(1183,402,4,16,rgb(0xdfedb3));
-        rect(1187,406,4,8,rgb(0xdfedb3));
-        for(int i=0;i<4;i++) {
-            int y=366+i*25+(int(game.preferences.reducedMotion?0:game.time*7)%15);
-            rect(1166+(i%2)*25,y,3,3,p.glow);
-        }
-    } else {
-        for(int x=1155;x<1214;x+=10) {
-            rect(x,352,8,115,rgb(0x66503d)); rect(x+1,353,2,111,rgb(0x927650));
-        }
-        for(int y: {370,449}) {
-            rect(1152,y,62,6,rgb(0x29303a));
-            for(int x: {1157,1205}) rect(x,y+2,3,2,rgb(0x9da9a2));
-        }
-        rect(1176,403,16,18,rgb(0xd9bd71)); rect(1179,397,10,8,rgb(0x927d4c));
-        rect(1182,407,4,8,rgb(0x604a3a));
-    }
-}
-
-void fireflies(const Game& game,const Palette& p) {
-    float time=game.preferences.reducedMotion?0:game.time;
-    for(int i=0;i<22;i++) {
-        float x=113+number(i,game.stage,64,1010),y=199+number(i,game.stage,82,416);
-        if(y>385&&y<465) continue;
-        int phase=int(time*1.2f+i*.71f)%6;
-        if(phase<2) continue;
-        int drift=int(std::sin(time*.7f+i)*4)/2*2;
-        rect(x-4,y+drift-4,10,10,opacity(p.glow,7));
-        rect(x-1,y+drift-1,4,4,opacity(p.glow,20));
-        rect(x,y+drift,2,2,opacity(p.glow,phase==5?190:115));
-    }
-}
-
 void crescent(float x,float y,float radius,Color moon,Color cut,int unit=4) {
     oval(x,y,radius,radius,moon,unit);
     oval(x+radius*.40f,y-radius*.22f,radius*.83f,radius*.86f,cut,unit);
@@ -480,120 +286,511 @@ void torch(float x,float y,const Game& game,const Palette& p) {
     rect(x+6,y-35+phase,3,7,rgb(0xa770d8));
     if(phase==2) rect(x-4,y-42,3,3,p.glow);
 }
-void castleFloor(const Palette& p) {
+
+const Room& current(const Game& game) {
+    static const Room fallback{};
+    return game.currentRoom>=0&&game.currentRoom<int(game.rooms.size())?game.rooms[game.currentRoom]:fallback;
+}
+int sceneSeed(const Game& game) {
+    const Room& room=current(game);
+    return int((room.seed^game.runSeed^uint32_t(room.layout)*157u)&0x3fffffffu);
+}
+Color roomAccent(RoomKind kind,const Palette& p) {
+    switch(kind) {
+        case RoomKind::Start:return rgb(0xa6d4a7);
+        case RoomKind::Treasure:return rgb(0xe5c578);
+        case RoomKind::Shop:return rgb(0xe3ba83);
+        case RoomKind::Sanctuary:return rgb(0xf2a8ca);
+        case RoomKind::Challenge:return rgb(0xd48c99);
+        case RoomKind::Boss:return rgb(0xbd91df);
+        default:return p.glow;
+    }
+}
+void heart(float x,float y,int unit,Color color) {
+    constexpr const char* rows[]={" mm mm ","mmmmmmm","mmmmmmm"," mmmmm ","  mmm  ","   m   "};
+    for(int row=0;row<6;row++) for(int col=0;col<7;col++)
+        if(rows[row][col]=='m') rect(x+(col-3)*unit,y+(row-3)*unit,unit,unit,color);
+}
+void paw(float x,float y,float size,Color color) {
+    oval(x,y+size*.14f,size*.45f,size*.31f,color,3);
+    oval(x-size*.47f,y-size*.25f,size*.17f,size*.22f,color,3);
+    oval(x-size*.17f,y-size*.48f,size*.17f,size*.22f,color,3);
+    oval(x+size*.18f,y-size*.48f,size*.17f,size*.22f,color,3);
+    oval(x+size*.48f,y-size*.25f,size*.17f,size*.22f,color,3);
+}
+void whiskers(float x,float y,float size,Color color) {
+    diamond(x,y,8,color,2);
+    for(int side: {-1,1}) for(int row=-1;row<=1;row++) {
+        for(int step=0;step<4;step++)
+            rect(x+side*(size*.22f+step*size*.15f)-(side<0?size*.16f:0),
+                 y+row*(7+step*4),size*.16f,3,color);
+    }
+}
+void catFace(float x,float y,int unit,Color color,Color eyes) {
+    constexpr const char* rows[]={
+        "mm            mm","mmm          mmm","mmmm        mmmm","mmmmmmmmmmmmmmmm",
+        "mmmmmmmmmmmmmmmm","mmm  mmmmm  mmmm","mmm  mmmmm  mmmm","mmmmmmmmmmmmmmmm",
+        "mmmmmmm  mmmmmmm","mmmmmmmmmmmmmmmm","  mmmmmmmmmmmm  ","    mmmmmmmm    "};
+    for(int row=0;row<12;row++) for(int col=0;col<16;col++)
+        if(rows[row][col]=='m') rect(x+(col-8)*unit,y+(row-6)*unit,unit,unit,color);
+    rect(x-5*unit,y-unit,2*unit,2*unit,eyes); rect(x+3*unit,y-unit,2*unit,2*unit,eyes);
+}
+
+bool clearDecoration(Vector2 point,const Game& game,float margin=20) {
+    const Room& room=current(game);
+    if(distance(point,RoomCenter)<105) return false;
+    if(room.neighbors[0]>=0&&point.y<405&&std::abs(point.x-640)<59) return false;
+    if(room.neighbors[2]>=0&&point.y>405&&std::abs(point.x-640)<59) return false;
+    if(room.neighbors[1]>=0&&point.x>640&&std::abs(point.y-405)<58) return false;
+    if(room.neighbors[3]>=0&&point.x<640&&std::abs(point.y-405)<58) return false;
+    if(room.kind==RoomKind::Boss&&distance(point,PortalPosition)<80) return false;
+    for(auto obstacle:game.obstacles) if(inside(point,grow(obstacle,margin))) return false;
+    for(const auto& pickup:game.loot) if(distance(point,pickup.pos)<29) return false;
+    return true;
+}
+void woodlandFloor(const Game& game,const Palette& p) {
+    const int seed=sceneSeed(game);
     rect(Field,p.soil);
-    for(int row=0,y=160;y<652;y+=30,row++) {
-        for(int x=64-(row%2)*28;x<1216;x+=56) {
-            int left=std::max(64,x),right=std::min(1216,x+55);
-            int bottom=std::min(652,y+29);
-            if(right<=left) continue;
-            Color fill=number(x,y,7,8)==0?rgb(0x383247):p.soil;
-            rect(left,y,right-left,bottom-y,fill);
-            rect(left,y,right-left,1,p.shade); rect(left,y,1,bottom-y,p.shade);
-            if(number(x,y,8,11)<2&&right-left>35) {
-                rect(left+8,y+6,11,1,rgb(0x484052));
-                rect(left+19,y+7,5,1,rgb(0x484052));
-            }
-            if(number(x,y,2,23)==0&&right-left>32) {
-                rect(left+19,y+9,2,7,p.shade); rect(left+15,y+15,5,2,p.shade);
-                rect(left+15,y+17,2,5,p.shade);
-            }
+    for(int i=0;i<33;i++) {
+        Vector2 point{float(91+number(i,3,seed,1091)),float(185+number(i,7,seed,430))};
+        if(!clearDecoration(point,game,16)) continue;
+        int radius=18+number(i,9,seed,23);
+        oval(point.x,point.y,radius,radius*.43f,i%3==0?p.shade:p.moss,4);
+        if(i%3==0) oval(point.x-6,point.y-5,radius*.7f,4,p.moss,3);
+    }
+    for(int i=0;i<91;i++) {
+        Vector2 point{float(88+number(i,2,seed,1101)),float(193+number(i,4,seed,427))};
+        if(!clearDecoration(point,game)) continue;
+        if(i%6==0) { tuft(point.x-7,point.y+3,p,i); tuft(point.x+9,point.y-2,p,i+1); }
+        else if(i%3==0) {
+            rect(point.x,point.y,6,2,p.grass); rect(point.x+9,point.y+4,4,2,p.moss);
+        } else tuft(point.x,point.y,p,i);
+    }
+    for(int i=0;i<25;i++) {
+        Vector2 point{float(105+number(i,6,seed,1065)),float(205+number(i,12,seed,402))};
+        if(!clearDecoration(point,game,30)) continue;
+        if(i%7==0) stone(point.x,point.y,2,p,i);
+        else if(i%5==0) mushrooms(point.x,point.y,p);
+        else {
+            flower(point.x,point.y,i%2?p.flower:p.glow,p,i);
+            if(i%3==0) flower(point.x+13,point.y+7,p.flower,p,i+1);
         }
     }
-    // A carved lunar seal sits beneath Maliketh rather than competing with the characters.
-    oval(900,410,155,155,rgb(0x28263a),4); oval(900,410,149,149,rgb(0x544260),4);
-    oval(900,410,146,146,p.soil,4); oval(900,410,136,136,rgb(0x46374f),4);
-    oval(900,410,133,133,p.soil,4);
-    for(int i=0;i<16;i++) {
-        float angle=i*3.14159265f/8;
-        float x=900+std::cos(angle)*142,y=410+std::sin(angle)*142;
-        diamond(x,y,4,rgb(0x80658a),2);
-        if(i%2==0) diamond(900+std::cos(angle)*120,410+std::sin(angle)*120,5,rgb(0x544261),2);
-    }
-    crescent(905,335,58,rgb(0x4d3d59),p.soil,4);
-    diamond(878,416,9,rgb(0x62506e),3);
-    // Raised masonry around the rescue alcove is a floor motif, not an extra obstacle.
-    rect(1044,190,128,115,rgb(0x252335)); rect(1049,195,118,105,rgb(0x44364d));
-    rect(1053,199,110,97,rgb(0x342a40));
-    for(int x=1059;x<1160;x+=17) rect(x,292,8,2,rgb(0x7a6084));
 }
-void carpet(const Palette& p) {
-    rect(95,385,1060,78,Ink); rect(96,388,1059,72,rgb(0x68485e));
-    rect(99,390,1053,68,rgb(0x957389)); rect(101,393,1049,62,rgb(0x4d334d));
-    rect(104,397,1043,54,rgb(0x58384f));
-    rect(104,399,1043,2,rgb(0x79526b)); rect(104,448,1043,2,rgb(0x79526b));
-    for(int x=110;x<1143;x+=28) {
-        diamond(x,394,3,rgb(0xbf97a5),2); diamond(x,454,3,rgb(0xbf97a5),2);
-        if(x%3==0) { rect(x,411,13,1,rgb(0x604056)); rect(x+5,436,9,1,rgb(0x604056)); }
+void masonryFloor(const Game& game,const Palette& p) {
+    const int seed=sceneSeed(game);
+    rect(Field,p.soil);
+    for(int row=0,y=160;y<652;y+=30,row++) for(int x=64-(row%2)*28;x<1216;x+=56) {
+        int left=std::max(64,x),right=std::min(1216,x+55),bottom=std::min(652,y+29);
+        if(right<=left) continue;
+        Color fill=number(x,y,seed,9)==0?p.moss:p.soil;
+        rect(left,y,right-left,bottom-y,fill);
+        rect(left,y,right-left,1,p.shade); rect(left,y,1,bottom-y,p.shade);
+        if(number(x,y,seed+1,13)<2&&right-left>35)
+            rect(left+8,y+6,11,1,opacity(p.stoneLight,37));
+        if(number(x,y,seed+2,27)==0&&right-left>32) {
+            rect(left+19,y+9,2,7,p.shade); rect(left+15,y+15,5,2,p.shade);
+            rect(left+15,y+17,2,5,p.shade);
+        }
     }
-    for(int x: {92,1153}) for(int y=392;y<456;y+=8) rect(x,y,5,3,rgb(0x9b7c8e));
-    for(int x: {280,530,780,1030}) {
-        diamond(x,425,17,rgb(0x72506b),3); diamond(x,425,12,rgb(0x4d334d),3);
-        diamond(x,425,4,rgb(0xa47b99),2);
-    }
-    // Small candle clusters on the carpet edge echo the reference's purple magic.
-    for(int x: {191,536,1035}) for(int i=0;i<3;i++) {
-        int y=i%2?478:370;
-        oval(x+i*10,y+4,6,3,opacity(Ink,130),2);
-        rect(x+i*10-2,y-10-i%2*5,5,14+i%2*5,rgb(0x9d82a5));
-        rect(x+i*10-1,y-16-i%2*5,3,6,p.glow);
+    if(game.stage==2) {
+        // Sparse traces around the perimeter leave the battle space quiet.
+        for(int side=0;side<2;side++) for(int i=0;i<6;i++) {
+            int y=198+i*72,x=side?1105:117;
+            rect(x,y,53,2,rgb(0x3a626d)); rect(x+51,y,2,16,rgb(0x3a626d));
+            rect(x+49,y+14,6,5,rgb(0x58948f));
+            if(i%3==0) rect(x+13,y-3,6,6,rgb(0x6c598e));
+        }
+        for(int i=0;i<7;i++) {
+            int x=175+i*150;
+            rect(x,197,38,2,rgb(0x365467)); rect(x+36,197,2,12,rgb(0x365467));
+            rect(x+34,208,6,3,rgb(0x629199));
+            rect(x,613,41,2,rgb(0x365467));
+        }
     }
 }
-void tower(const Game& game,const Palette& p) {
-    castleFloor(p); carpet(p);
-    for(int y=146,row=0;y<680;y+=22,row++) {
-        for(int side: {0,1218}) for(int col=0;col<2;col++) {
+
+void routeSegment(int direction,const Palette& p,int seed,int stage) {
+    int start=direction==0?160:direction==3?64:direction==1?640:405;
+    int end=direction==0?405:direction==3?640:direction==1?1216:652;
+    bool vertical=direction==0||direction==2;
+    for(int at=start;at<end;at+=10) {
+        int length=std::min(10,end-at),wobble=stage<2?number(at,direction,seed,3)-1:0;
+        if(vertical) {
+            rect(602+wobble,at,76,length,p.pathShade);
+            rect(608+wobble,at,64,length,p.path);
+        } else {
+            rect(at,367+wobble,length,76,p.pathShade);
+            rect(at,373+wobble,length,64,p.path);
+        }
+        if(number(at,direction,seed,5)==0) {
+            if(vertical) rect(616+number(at,1,seed,35),at+2,5,2,p.pathLight);
+            else rect(at+2,385+number(at,1,seed,35),5,2,p.pathLight);
+        }
+    }
+}
+void routes(const Game& game,const Palette& p) {
+    const Room& room=current(game);
+    for(int direction=0;direction<4;direction++)
+        if(room.neighbors[direction]>=0) routeSegment(direction,p,sceneSeed(game),game.stage);
+    oval(640,405,51,29,p.pathShade,3); oval(640,405,46,26,p.path,3);
+    if(game.stage>=2) {
+        for(int direction=0;direction<4;direction++) {
+            if(room.neighbors[direction]<0) continue;
+            if(direction==0) { rect(609,165,2,209,p.stone); rect(669,165,2,209,p.stone); }
+            if(direction==1) { rect(675,374,536,2,p.stone); rect(675,434,536,2,p.stone); }
+            if(direction==2) { rect(609,436,2,211,p.stone); rect(669,436,2,211,p.stone); }
+            if(direction==3) { rect(69,374,536,2,p.stone); rect(69,434,536,2,p.stone); }
+        }
+    }
+}
+void brook(const Game& game,const Palette& p,float center) {
+    float time=game.preferences.reducedMotion?0:game.time;
+    for(int y=160;y<653;y+=4) {
+        int bend=int(std::sin(float(y)*.013f)*8)/2*2;
+        float x=center+bend;
+        rect(x-26,y,52,4,p.shade); rect(x-22,y,44,4,rgb(0x465b42));
+        rect(x-18,y,36,4,rgb(0x1d404b)); rect(x-12,y,24,4,rgb(0x2c5c66));
+        rect(x-5,y,12,4,rgb(0x306a73));
+        if(y%28==0) {
+            rect(x-16,y,7,2,rgb(0x75917e));
+            rect(x-5+int(time*3+y)%3*2,y+1,11,2,rgb(0x5e9699));
+        }
+    }
+    for(int i=0;i<8;i++) {
+        int y=197+i*55;
+        if(y>345&&y<470) continue;
+        float side=i%2?1.f:-1.f;
+        tuft(center+side*29,y,p,i);
+        if(i%3==0) flower(center-side*31,y+4,p.flower,p,i);
+    }
+}
+void bridge(float center) {
+    rect(center-45,366,91,78,Ink);
+    for(int x=int(center)-42;x<int(center)+44;x+=9) {
+        rect(x,369,8,72,rgb(0x805f42)); rect(x+1,371,2,67,rgb(0xb28a59));
+        rect(x+4,381+(x%3)*7,2,31,rgb(0x624a36));
+        rect(x+3,374,2,2,Ink); rect(x+3,434,2,2,Ink);
+    }
+    for(int y: {363,443}) {
+        rect(center-49,y,101,7,rgb(0x342a27)); rect(center-47,y,97,3,rgb(0xc29b64));
+        for(int x: {int(center)-49,int(center)+42}) {
+            rect(x,y-6,10,17,Ink); rect(x+2,y-5,6,15,rgb(0x77563b));
+            rect(x+2,y-5,6,3,rgb(0xc6a570));
+        }
+    }
+}
+void cushion(Rectangle area,const Palette& p,int seed) {
+    rect(area,Ink);
+    rect(area.x+2,area.y+3,area.width-4,area.height-5,rgb(0x725c69));
+    rect(area.x+5,area.y+4,area.width-10,area.height-13,rgb(0xa48b8f));
+    rect(area.x+9,area.y+7,area.width-18,area.height-22,rgb(0xbba29a));
+    rect(area.x+12,area.y+8,area.width-24,3,rgb(0xd8bda7));
+    rect(area.x+5,area.y+area.height-12,area.width-10,4,rgb(0x8e717d));
+    for(int x=int(area.x)+12;x<int(area.x+area.width)-8;x+=14) {
+        rect(x,area.y+3,5,2,rgb(0xe0c2b1)); rect(x,area.y+area.height-10,5,2,rgb(0xc8a69d));
+    }
+    float x=area.x+area.width*.5f,y=area.y+area.height*.48f;
+    if(seed%2) paw(x,y,21,rgb(0x886c7b)); else heart(x,y,3,rgb(0x947283));
+    for(int side: {-1,1}) rect(x+side*(area.width*.39f)-2,y-4,4,8,rgb(0x8d7380));
+    (void)p;
+}
+void terminal(Rectangle area,const Palette& p,int seed) {
+    rect(area,Ink); rect(area.x+3,area.y+4,area.width-6,area.height-8,rgb(0x354756));
+    rect(area.x+5,area.y+5,area.width-10,5,rgb(0x71889a));
+    rect(area.x+8,area.y+14,area.width-16,area.height-31,rgb(0x162b36));
+    rect(area.x+11,area.y+17,area.width-22,area.height-37,rgb(0x203e4a));
+    rect(area.x+10,area.y+area.height-13,area.width-20,4,rgb(0x4b6576));
+    int slots=std::max(1,int(area.width)/24);
+    for(int i=0;i<slots;i++) {
+        float x=area.x+13+i*22;
+        rect(x,area.y+area.height-12,8,3,i%3==0?rgb(0x91b77b):p.flower);
+    }
+    float x=area.x+area.width*.50f,y=area.y+area.height*.43f;
+    rect(x-19,y-6,14,3,rgb(0x62a2aa)); rect(x+6,y+1,16,3,rgb(0x62a2aa));
+    rect(x-6,y-3,3,10,rgb(0x52788f)); rect(x+3,y-8,3,10,rgb(0x52788f));
+    if(seed%2) rect(x+3,y+3,7,3,rgb(0x8b7da7));
+}
+
+void environmentBorder(const Game& game,const Palette& p) {
+    int seed=sceneSeed(game);
+    if(game.stage<2) {
+        treeBorders(p,game.stage);
+        if(game.stage==1) {
+            for(int i=0;i<4;i++) {
+                int x=119+i*295+number(i,4,seed,27);
+                rect(x,152,68,15,rgb(0x323a44));
+                for(int block=0;block<3;block++) {
+                    int height=9+(block%2)*8;
+                    rect(x+block*24,151-height,21,height+8,p.stone);
+                    rect(x+block*24+1,151-height,18,3,p.stoneLight);
+                }
+            }
+            float time=game.preferences.reducedMotion?0:game.time;
+            for(int i=0;i<3;i++) {
+                float x=230+i*372+int(std::sin(time*.09f+i*2)*12)/3*3;
+                float y=i%2?578:230;
+                oval(x,y,130,12,opacity(p.glow,5),4);
+                oval(x+36,y-5,89,8,opacity(p.glow,6),3);
+            }
+        }
+    } else {
+        for(int y=146,row=0;y<680;y+=22,row++) for(int side: {0,1218}) for(int col=0;col<2;col++) {
             int x=side+col*31;
-            rect(x,y,30,21,rgb(0x2a263b)); rect(x+1,y+1,28,2,rgb(0x4a3c58));
-            if((row+col)%4==0) rect(x+5,y+5,9,1,rgb(0x3b3149));
+            rect(x,y,30,21,p.shade); rect(x+1,y+1,28,2,p.stone);
+            if((row+col)%4==0) rect(x+5,y+5,9,1,p.moss);
+        }
+        for(int x=64;x<1216;x+=32) {
+            rect(x,146,31,14,p.stone); rect(x+1,147,29,2,p.stoneLight);
+            rect(x,652,31,11,p.shade); rect(x+1,653,29,2,p.stone);
+        }
+        for(int x: {43,1238}) for(int y: {207,490}) column(x,y,p);
+        // Windows avoid the central north and south passages.
+        for(int x: {180,430,850,1100}) {
+            rect(x-26,146,53,26,Ink); rect(x-22,147,45,21,rgb(0x182339));
+            rect(x-21,147,42,2,p.stoneLight); rect(x-2,147,3,22,p.stone);
+            rect(x-25,169,51,4,p.stone); rect(x+10,153,2,2,p.glow);
+            if(game.stage==3&&x==1100) crescent(x-10,157,8,p.glow,rgb(0x182339),2);
+        }
+        archWindow(31,245,p,false); archWindow(1247,245,p,game.stage==3);
+        for(Vector2 point: std::array<Vector2,4>{{{78,277},{1202,277},{78,565},{1202,565}}}) {
+            if(game.stage==3) torch(point.x,point.y,game,p);
+            else {
+                softLight(point,48,p.flower);
+                rect(point.x-7,point.y-22,14,29,Ink);
+                rect(point.x-4,point.y-19,8,21,rgb(0x5693ac));
+                rect(point.x-2,point.y-16,3,15,rgb(0xc0e4e7));
+                rect(point.x-10,point.y+7,20,5,p.stone);
+            }
         }
     }
-    for(int x=64;x<1216;x+=32) {
-        rect(x,146,31,14,rgb(0x44354f)); rect(x+1,147,29,2,rgb(0x766183));
-        rect(x,652,31,11,rgb(0x252235)); rect(x+1,653,29,2,rgb(0x55415e));
+    // The visible room boundary agrees with the simulation's single rectangular field.
+    rect(64,160,1152,2,p.shade); rect(64,650,1152,2,p.shade);
+    rect(64,160,2,492,p.shade); rect(1214,160,2,492,p.shade);
+}
+
+// Local door coordinates: along is measured across the opening, inward toward the arena.
+void doorRect(int direction,float along,float inward,float width,float depth,Color color) {
+    switch(direction) {
+        case 0:rect(640+along,160+inward,width,depth,color);break;
+        case 1:rect(1216-inward-depth,405+along,depth,width,color);break;
+        case 2:rect(640-along-width,652-inward-depth,width,depth,color);break;
+        default:rect(64+inward,405-along-width,depth,width,color);break;
     }
-    for(int x: {43,1238}) for(int y: {207,490}) column(x,y,p);
-    archWindow(31,363,p,false); archWindow(1247,363,p,true);
-    for(int x: {178,430,684,941,1135}) {
-        // Shallow upper windows retain an unobstructed walkable floor below them.
-        rect(x-26,146,53,26,Ink); rect(x-22,147,45,21,rgb(0x182339));
-        rect(x-21,147,42,2,rgb(0x6e597b)); rect(x-2,147,3,22,rgb(0x554161));
-        rect(x-25,169,51,4,rgb(0x695173)); rect(x+10,153,2,2,p.glow);
-        if(x==941) crescent(x-10,157,8,p.glow,rgb(0x182339),2);
+}
+void doors(const Game& game,const Palette& p) {
+    const Room& room=current(game);
+    bool open=game.doorsOpen();
+    for(int direction=0;direction<4;direction++) {
+        int neighbor=room.neighbors[direction];
+        if(neighbor<0) continue;
+        Color accent=neighbor<int(game.rooms.size())?roomAccent(game.rooms[neighbor].kind,p):p.glow;
+        doorRect(direction,-50,-64,100,94,p.pathShade);
+        doorRect(direction,-46,-64,92,89,open?p.path:rgb(0x292635));
+        for(int side: {-1,1}) {
+            float along=side<0?-59.f:50.f;
+            doorRect(direction,along,-19,9,49,Ink);
+            doorRect(direction,along+2,-17,5,45,p.stone);
+            doorRect(direction,along+2,-15,2,40,p.stoneLight);
+            for(int inward: {-6,10,24}) doorRect(direction,along,inward,9,2,p.shade);
+        }
+        doorRect(direction,-59,-21,118,8,p.stone);
+        doorRect(direction,-56,-20,112,2,p.stoneLight);
+        doorRect(direction,-7,-21,14,7,accent);
+        if(open) {
+            doorRect(direction,-44,-10,88,31,opacity(accent,12));
+            doorRect(direction,-31,-6,62,24,opacity(accent,13));
+            doorRect(direction,-2,7,4,14,accent);
+            doorRect(direction,-8,6,16,3,accent);
+            doorRect(direction,-5,3,10,3,accent);
+            doorRect(direction,-2,0,4,3,accent);
+        } else {
+            for(int along=-44;along<46;along+=12) {
+                doorRect(direction,float(along),-12,8,34,p.stone);
+                doorRect(direction,float(along)+1,-11,2,32,p.stoneLight);
+            }
+            doorRect(direction,-46,2,92,5,Ink);
+            doorRect(direction,-8,-5,16,20,rgb(0xa47b80));
+            doorRect(direction,-4,-1,8,8,rgb(0xe3a5aa));
+            doorRect(direction,-2,8,4,5,Ink);
+        }
     }
-    for(Vector2 point: std::array<Vector2,4>{{{74,284},{1206,284},{74,567},{1206,567}}})
-        torch(point.x,point.y,game,p);
-    for(Vector2 point: std::array<Vector2,5>{{{238,249},{435,561},{600,250},{1041,608},{1118,336}}}) {
-        diamond(point.x,point.y,4,rgb(0x64516e),2);
-        rect(point.x-9,point.y,3,2,rgb(0x45354f)); rect(point.x+8,point.y,3,2,rgb(0x45354f));
+}
+
+void floorRing(Vector2 center,int radius,const Palette& p,Color accent) {
+    oval(center.x,center.y,radius,radius*.60f,p.shade,4);
+    oval(center.x,center.y,radius-4,(radius-4)*.60f,opacity(accent,32),4);
+    oval(center.x,center.y,radius-8,(radius-8)*.60f,p.soil,4);
+    for(int i=0;i<8;i++) {
+        float angle=i*3.14159265f/4;
+        diamond(center.x+std::cos(angle)*(radius-3),center.y+std::sin(angle)*(radius-3)*.6f,3,opacity(accent,125),2);
     }
-    // Light falls from the window in discrete, translucent bands.
-    for(int i=0;i<5;i++) rect(1114-i*12,179+i*15,58+i*10,3,opacity(p.glow,5));
-    // Obstacles are still represented if a future level introduces them.
-    for(size_t i=0;i<game.obstacles.size();i++) ruin(game.obstacles[i],p,int(i));
+}
+void pedestal(const Game& game,const Palette& p,Color accent) {
+    float x=RoomCenter.x,y=RoomCenter.y;
+    oval(x,y+24,40,9,opacity(Ink,150),3);
+    rect(x-29,y+8,58,17,Ink); rect(x-26,y+10,52,12,p.stone);
+    rect(x-30,y+4,60,8,p.stoneLight); rect(x-27,y+4,54,2,accent);
+    rect(x-19,y+15,38,2,p.shade);
+    if(!current(game).rewardClaimed) {
+        softLight({x,y-5},58,accent);
+        rect(x-3,y+15,6,4,accent);
+    }
+}
+void roomFeature(const Game& game,const Palette& p) {
+    const Room& room=current(game);
+    Color accent=roomAccent(room.kind,p);
+    switch(room.kind) {
+        case RoomKind::Start:
+            floorRing(RoomCenter,87,p,accent);
+            paw(640,402,37,opacity(accent,73));
+            for(int i=0;i<3;i++) paw(622+(i%2)*29,471+i*30,10,opacity(accent,54));
+            break;
+        case RoomKind::Treasure:
+            floorRing(RoomCenter,96,p,accent);
+            for(int side: {-1,1}) diamond(640+side*68,405,9,opacity(accent,120),3);
+            pedestal(game,p,accent);
+            break;
+        case RoomKind::Shop:
+            rect(477,345,326,125,Ink); rect(480,348,320,119,rgb(0x755667));
+            rect(484,352,312,111,rgb(0x4e3b4b));
+            for(int x=495;x<795;x+=24) {
+                diamond(x,354,3,accent,2);diamond(x,459,3,accent,2);
+            }
+            for(int side: {-1,1}) {
+                oval(640+side*104,408,13,13,rgb(0xa68c59),3);
+                oval(640+side*104,408,9,9,rgb(0xd7bc7c),3);
+                rect(638+side*104,402,3,12,rgb(0x987b4c));
+            }
+            pedestal(game,p,accent);
+            break;
+        case RoomKind::Sanctuary:
+            floorRing(RoomCenter,106,p,accent);
+            heart(640,387,6,opacity(accent,99));
+            for(int side: {-1,1}) for(int row: {-1,1})
+                flower(640+side*69,405+row*32,accent,p,row+side);
+            if(!room.rewardClaimed) softLight(RoomCenter,105,accent);
+            break;
+        case RoomKind::Challenge:
+            floorRing(RoomCenter,117,p,room.cleared?p.glow:accent);
+            for(int side: {-1,1}) for(int offset=0;offset<3;offset++)
+                rect(640+side*(56+offset*15)-3,389+offset*8,6,19,opacity(accent,93));
+            diamond(640,405,14,opacity(accent,75),3);
+            break;
+        case RoomKind::Boss:
+            floorRing(RoomCenter,167,p,accent);
+            if(game.stage==0) {
+                paw(640,403,82,rgb(0x58624c));
+                heart(640,414,5,opacity(p.flower,80));
+            } else if(game.stage==1) whiskers(640,405,113,rgb(0x63737c));
+            else if(game.stage==2) {
+                catFace(640,398,8,rgb(0x355266),rgb(0x727d8d));
+                rect(575,424,39,5,rgb(0x534c6f)); rect(666,372,33,4,rgb(0x587363));
+            } else crescent(640,397,85,rgb(0x594366),p.soil,4);
+            if(room.cleared&&!room.rewardClaimed&&game.stage<FloorCount-1)
+                pedestal(game,p,rgb(0xe0c68d));
+            break;
+        case RoomKind::Combat:
+            if(room.layout%3==1) paw(640,404,24,opacity(p.stoneLight,25));
+            break;
+    }
+}
+void stairs(const Game& game,const Palette& p) {
+    const Room& room=current(game);
+    if(room.kind!=RoomKind::Boss||!room.cleared||!room.rewardClaimed||game.stage>=FloorCount-1) return;
+    float x=PortalPosition.x,y=PortalPosition.y;
+    softLight({x,y},75,rgb(0xddc28a));
+    rect(x-58,y-34,116,77,Ink); rect(x-54,y-31,108,70,p.stone);
+    rect(x-48,y-27,96,61,Ink);
+    for(int i=0;i<5;i++) {
+        int inset=i*3;
+        Color color=rgb(0x70677b); color.r-=i*8;color.g-=i*7;color.b-=i*7;
+        rect(x-44+inset,y-23+i*11,88-inset*2,10,color);
+        rect(x-43+inset,y-23+i*11,86-inset*2,2,p.stoneLight);
+    }
+    rect(x-10,y+29,20,3,rgb(0xd6be85)); rect(x-6,y+32,12,3,rgb(0xd6be85));
+    rect(x-3,y+35,6,3,rgb(0xd6be85));
+    diamond(x,y-45,6,rgb(0xe1c68b),2);
+}
+void finalRefuge(const Game& game,const Palette& p) {
+    if(game.stage!=3||current(game).kind!=RoomKind::Boss) return;
+    const float x=RescuePosition.x,y=RescuePosition.y;
+    Color metal=game.malikethFriendly?rgb(0xaa9b86):rgb(0x7f6b98);
+    rect(x-64,y-2,128,18,Ink); rect(x-60,y-1,120,12,rgb(0x4b3a57));
+    rect(x-56,y-5,112,4,metal);
+    if(!game.giovannyRescued) {
+        // Front bars and characters are drawn later by the character/effect renderer.
+        rect(x-62,y-106,6,104,metal); rect(x+56,y-106,6,104,metal);
+        rect(x-63,y-109,126,7,metal); rect(x-59,y-108,118,2,p.glow);
+        if(game.malikethFriendly) {
+            rect(x-77,y-103,5,102,metal);rect(x+72,y-103,5,102,metal);
+            heart(x,y-126,3,rgb(0xdfaec4));
+        }
+    }
+    if(!game.bossDefeated) return;
+    Vector2 bowl{MalikethPosition.x,MalikethPosition.y+31};
+    oval(bowl.x,bowl.y+4,24,8,Ink,2); oval(bowl.x,bowl.y,22,8,rgb(0xbc9dab),2);
+    oval(bowl.x,bowl.y-2,18,5,rgb(0x655161),2);
+    if(game.malikethFriendly) {
+        oval(bowl.x,bowl.y-3,15,4,rgb(0xd8ab8c),2);
+        rect(bowl.x-7,bowl.y-5,7,2,rgb(0xf1d1a3));
+        softLight(MalikethPosition,91,rgb(0xe4aabf));
+        for(int i=0;i<5;i++) {
+            float progress=float(i)/5;
+            heart(950+progress*111,383-progress*70,2,rgb(0x9c718f));
+        }
+    } else if(game.hasChuru) {
+        rect(bowl.x+25,bowl.y-20,9,23,rgb(0xd69cbb));
+        rect(bowl.x+27,bowl.y-17,5,13,rgb(0xf1d7ba));
+        rect(bowl.x+24,bowl.y-22,11,4,rgb(0x9d6a95));
+        heart(bowl.x+29,bowl.y-30,2,rgb(0xd8a5c6));
+    }
+}
+void fireflies(const Game& game,const Palette& p) {
+    float time=game.preferences.reducedMotion?0:game.time;
+    int seed=sceneSeed(game);
+    for(int i=0;i<17;i++) {
+        float x=113+number(i,seed,64,1010),y=199+number(i,seed,82,416);
+        if(!clearDecoration({x,y},game,7)) continue;
+        int phase=int(time*1.2f+i*.71f)%6;
+        if(phase<2) continue;
+        int drift=int(std::sin(time*.7f+i)*4)/2*2;
+        rect(x-4,y+drift-4,10,10,opacity(p.glow,7));
+        rect(x-1,y+drift-1,4,4,opacity(p.glow,20));
+        rect(x,y+drift,2,2,opacity(p.glow,phase==5?190:115));
+    }
 }
 
 } // namespace
 
 void drawWorld(const Game& game) {
     const Palette p=palette(game.stage);
+    const Room& room=current(game);
     float time=game.preferences.reducedMotion?0:game.time;
-    // Keep the HUD and menu footer independent from decorative scenery.
+    int seed=sceneSeed(game);
     BeginScissorMode(0,145,Width,535);
     rect(0,145,Width,535,p.back);
-    if(game.stage>=2) tower(game,p);
-    else {
-        ground(game,p);
-        if(game.stage==0) stream(time,p);
-        mainPath(game,p);
-        if(game.stage==0) bridge();
-        for(size_t i=0;i<game.obstacles.size();i++) {
-            if(game.stage==0) pond(game.obstacles[i],p,time,int(i));
-            else ruin(game.obstacles[i],p,int(i));
-        }
-        forestDetails(game,p);
-        gate(game,p);
+    if(game.stage<2) woodlandFloor(game,p); else masonryFloor(game,p);
+    float river=0;
+    if(game.stage==0&&room.layout%3==0&&(room.kind==RoomKind::Start||room.kind==RoomKind::Combat)) {
+        if(room.neighbors[1]>=0) river=858;
+        else if(room.neighbors[3]>=0) river=422;
+        if(river) brook(game,p,river);
     }
+    routes(game,p);
+    if(river) bridge(river);
+    roomFeature(game,p);
+    for(size_t i=0;i<game.obstacles.size();i++) {
+        if(game.stage==0) {
+            if(room.layout%4==2) pond(game.obstacles[i],p,time,int(i));
+            else cushion(game.obstacles[i],p,seed+int(i));
+        } else if(game.stage==2) terminal(game.obstacles[i],p,seed+int(i));
+        else ruin(game.obstacles[i],p,seed+int(i));
+    }
+    environmentBorder(game,p);
+    stairs(game,p);
+    finalRefuge(game,p);
+    doors(game,p);
     fireflies(game,p);
     EndScissorMode();
 }

@@ -12,4 +12,8 @@ int drawMenu(const Game& game,const Artwork& art,Screen screen,int selected,Vect
              bool mouseActive,float uiTime,int galleryCharacter=0);
 int menuItemCount(Screen screen,bool hasSave);
 const char* menuItem(Screen screen,int index,bool hasSave);
+// Rewards: 0..2 selects an offer; 3 returns to the room. Overlays: 0 closes.
+int drawReward(const Game& game,const Artwork& art,int selected,Vector2 mouse,bool mouseActive);
+int drawMap(const Game& game,const Artwork& art,Vector2 mouse,bool mouseActive);
+int drawInventory(const Game& game,const Artwork& art,Vector2 mouse,bool mouseActive);
 }

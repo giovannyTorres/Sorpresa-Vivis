@@ -1,5 +1,6 @@
 #include "visuals.hpp"
 #include "profile.hpp"
+#include "audio.hpp"
 #include "assets_embedded.hpp"
 #include <array>
 #include <cstdint>
@@ -8,47 +9,6 @@
 
 namespace {
 using namespace vivis;
-struct Audio {
-    std::array<Sound,9> effects{};
-    Sound music{};
-    bool ready{};
-    Sound synth(float frequency,float duration,bool ambient=false) {
-        const int rate=22050,frames=int(duration*rate);
-        std::vector<std::int16_t> samples(frames);
-        constexpr float notes[]={220.0f,261.63f,329.63f,293.66f,196.0f,246.94f,293.66f,261.63f};
-        for(int n=0;n<frames;++n) {
-            float t=float(n)/rate;
-            float f=ambient?notes[int(t*2)%8]:frequency;
-            float envelope=ambient?0.025f*(0.45f+0.55f*std::sin(3.14159265f*std::fmod(t*2,1.0f))):
-                0.16f*std::min(1.0f,t/0.008f)*(1-t/duration);
-            float wave=std::sin(6.2831853f*f*t)+0.2f*std::sin(6.2831853f*f*2*t);
-            samples[n]=std::int16_t(wave*envelope*32700);
-        }
-        Wave wave{static_cast<unsigned>(frames),rate,16,1,samples.data()};
-        return LoadSoundFromWave(wave);
-    }
-    void init(bool enabled) {
-        if(!enabled) return;
-        InitAudioDevice(); ready=IsAudioDeviceReady();
-        if(!ready) return;
-        float frequencies[]={740,120,880,1040,420,520,1175,680,960};
-        for(std::size_t n=0;n<effects.size();++n) effects[n]=synth(frequencies[n],n==6?0.35f:0.09f);
-        music=synth(220,8,true);
-    }
-    void update(Game& game) {
-        if(!ready) { game.cues.clear(); return; }
-        SetMasterVolume(game.preferences.muted?0:game.preferences.volume);
-        if(game.preferences.muted) StopSound(music);
-        else if(!IsSoundPlaying(music)) PlaySound(music);
-        for(Cue cue:game.cues) PlaySound(effects[static_cast<int>(cue)]);
-        game.cues.clear();
-    }
-    void close() {
-        if(!ready) return;
-        for(auto sound:effects) UnloadSound(sound);
-        UnloadSound(music); CloseAudioDevice();
-    }
-};
 Texture2D texture(const unsigned char* bytes,std::size_t count) {
     Image image=LoadImageFromMemory(".png",bytes,int(count));
     Texture2D result=LoadTextureFromImage(image); UnloadImage(image);
@@ -78,10 +38,12 @@ struct App {
         returnTo=parent; game.screen=screen; selected=0; mouseActive=false;
     }
     void back() {
+        if(game.mapOpen||game.inventoryOpen) { game.mapOpen=game.inventoryOpen=false; return; }
+        if(game.screen==Screen::Reward) { game.screen=Screen::Playing; game.rewardTime=0; selected=0; return; }
         if(game.screen==Screen::Paused) game.screen=Screen::Playing;
         else if(game.screen==Screen::Settings||game.screen==Screen::Controls||game.screen==Screen::Gallery) {
             game.screen=returnTo; game.saveRequested=true;
-        } else if(game.screen==Screen::Playing) game.screen=Screen::Paused;
+        } else if(game.screen==Screen::Playing) { game.screen=Screen::Paused; game.saveRequested=true; }
         else if(game.screen!=Screen::Title) game.screen=Screen::Title;
         selected=0;
     }
@@ -94,6 +56,12 @@ struct App {
     }
     void activate(int index) {
         if(index<0) return;
+        if(game.mapOpen||game.inventoryOpen) { game.mapOpen=game.inventoryOpen=false; return; }
+        if(game.screen==Screen::Reward) {
+            if(index==3) back();
+            else if(!game.chooseReward(index)) game.notify("Necesitas más monedas para ese objeto",2);
+            return;
+        }
         Screen screen=game.screen;
         if(screen==Screen::Gallery&&index>=100&&index<104) { gallery=index-100; return; }
         if(screen==Screen::Settings&&(index==201||index==202)) {
@@ -143,16 +111,29 @@ struct App {
         bool pause=IsKeyPressed(KEY_ESCAPE)||padPressed(GAMEPAD_BUTTON_MIDDLE_RIGHT);
         if(pause) { back(); return; }
         if(game.screen==Screen::Playing) {
+            if(IsKeyPressed(KEY_TAB)||padPressed(GAMEPAD_BUTTON_MIDDLE_LEFT)) { game.mapOpen=!game.mapOpen; game.inventoryOpen=false; }
+            if(IsKeyPressed(KEY_I)) { game.inventoryOpen=!game.inventoryOpen; game.mapOpen=false; }
+            if(game.mapOpen||game.inventoryOpen) return;
             Input input;
-            input.x=float(IsKeyDown(KEY_D)||IsKeyDown(KEY_RIGHT))-float(IsKeyDown(KEY_A)||IsKeyDown(KEY_LEFT));
-            input.y=float(IsKeyDown(KEY_S)||IsKeyDown(KEY_DOWN))-float(IsKeyDown(KEY_W)||IsKeyDown(KEY_UP));
+            input.x=float(IsKeyDown(KEY_D))-float(IsKeyDown(KEY_A));
+            input.y=float(IsKeyDown(KEY_S))-float(IsKeyDown(KEY_W));
+            input.aimX=float(IsKeyDown(KEY_RIGHT))-float(IsKeyDown(KEY_LEFT));
+            input.aimY=float(IsKeyDown(KEY_DOWN))-float(IsKeyDown(KEY_UP));
             if(IsGamepadAvailable(0)) {
                 Vector2 stick{GetGamepadAxisMovement(0,GAMEPAD_AXIS_LEFT_X),GetGamepadAxisMovement(0,GAMEPAD_AXIS_LEFT_Y)};
                 if(length(stick)>0.19f) { input.x+=stick.x; input.y+=stick.y; }
+                Vector2 right{GetGamepadAxisMovement(0,GAMEPAD_AXIS_RIGHT_X),GetGamepadAxisMovement(0,GAMEPAD_AXIS_RIGHT_Y)};
+                if(length(right)>.25f) { input.aimX=right.x; input.aimY=right.y; }
                 input.x+=float(padDown(GAMEPAD_BUTTON_LEFT_FACE_RIGHT))-float(padDown(GAMEPAD_BUTTON_LEFT_FACE_LEFT));
                 input.y+=float(padDown(GAMEPAD_BUTTON_LEFT_FACE_DOWN))-float(padDown(GAMEPAD_BUTTON_LEFT_FACE_UP));
             }
             input.shoot=IsKeyDown(KEY_SPACE)||padDown(GAMEPAD_BUTTON_RIGHT_FACE_DOWN);
+            if(IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+                float scale=std::min(float(GetScreenWidth())/Width,float(GetScreenHeight())/Height);
+                Vector2 offset{(GetScreenWidth()-Width*scale)/2,(GetScreenHeight()-Height*scale)/2};
+                Vector2 direction=unit(sub(mul(sub(GetMousePosition(),offset),1/scale),add(game.player,{0,-26})));
+                input.aimX=direction.x; input.aimY=direction.y; input.shoot=true;
+            }
             input.help=IsKeyPressed(KEY_E)||IsKeyPressed(KEY_ENTER)||padPressed(GAMEPAD_BUTTON_RIGHT_FACE_LEFT);
             input.dash=IsKeyPressed(KEY_LEFT_SHIFT)||IsKeyPressed(KEY_RIGHT_SHIFT)||IsKeyPressed(KEY_L)||padPressed(GAMEPAD_BUTTON_RIGHT_FACE_RIGHT);
             game.update(dt,input);
@@ -164,8 +145,15 @@ struct App {
                 selected=(selected+(down?1:-1)+count)%std::max(1,count); mouseActive=false;
                 game.cues.push_back(Cue::Dash);
             }
-            if(IsKeyPressed(KEY_LEFT)||padPressed(GAMEPAD_BUTTON_LEFT_FACE_LEFT)) adjust(-1);
-            if(IsKeyPressed(KEY_RIGHT)||padPressed(GAMEPAD_BUTTON_LEFT_FACE_RIGHT)) adjust(1);
+            if(game.screen==Screen::Reward) {
+                if(IsKeyPressed(KEY_ONE)) { activate(0); return; }
+                if(IsKeyPressed(KEY_TWO)) { activate(1); return; }
+                if(IsKeyPressed(KEY_THREE)) { activate(2); return; }
+                if(IsKeyPressed(KEY_LEFT)||padPressed(GAMEPAD_BUTTON_LEFT_FACE_LEFT)) { selected=(selected+3)%4; mouseActive=false; }
+                if(IsKeyPressed(KEY_RIGHT)||padPressed(GAMEPAD_BUTTON_LEFT_FACE_RIGHT)) { selected=(selected+1)%4; mouseActive=false; }
+            }
+            else if(IsKeyPressed(KEY_LEFT)||padPressed(GAMEPAD_BUTTON_LEFT_FACE_LEFT)) adjust(-1);
+            if(game.screen!=Screen::Reward&&(IsKeyPressed(KEY_RIGHT)||padPressed(GAMEPAD_BUTTON_LEFT_FACE_RIGHT))) adjust(1);
             if(IsKeyPressed(KEY_ENTER)||IsKeyPressed(KEY_SPACE)||padPressed(GAMEPAD_BUTTON_RIGHT_FACE_DOWN)) activate(selected);
             else if(padPressed(GAMEPAD_BUTTON_RIGHT_FACE_RIGHT)) back();
             else if(game.screen==Screen::Lost&&IsKeyPressed(KEY_R)) game.retry();
@@ -178,17 +166,37 @@ struct App {
 };
 void captureState(App& app,int step) {
     auto& g=app.game;
-    if(step==0) { g.screen=Screen::Title; g.hasSave=false; }
-    else if(step>=1&&step<=4) {
-        g.screen=Screen::Playing; g.loadStage(step<=2?0:step-2); g.invincible=0; g.showIntro=false; g.transitionTime=0;
-        g.player={510,420}; g.companion={440,460};
-        if(step==2) { g.time=1.3f; g.shoot(); g.help(); g.updateShots(.06f); g.pulse=.3f; }
-    } else if(step==5) { g.screen=Screen::Gallery; app.gallery=0; }
-    else if(step==6) g.screen=Screen::Settings;
-    else if(step==7) g.screen=Screen::Controls;
-    else if(step==8) g.screen=Screen::Lost;
-    else if(step==9) { g.screen=Screen::Won; g.runTime=154; }
+    g.newGame(40211);g.invincible=0;g.showIntro=false;g.introTime=0;g.transitionTime=0;
+    auto scene=[&](int floor,RoomKind kind) {
+        g.loadStage(floor);
+        for(int n=0;n<int(g.rooms.size());++n)if(g.rooms[n].kind==kind){g.enterRoom(n);break;}
+        g.invincible=0;g.showIntro=false;g.introTime=g.transitionTime=0;
+        g.player={510,455};g.companion={440,480};g.time=1.3f;g.noticeTime=0;
+    };
+    if(step==0){g.screen=Screen::Title;g.hasSave=false;}
+    else if(step==1)scene(0,RoomKind::Combat);
+    else if(step==2){scene(0,RoomKind::Combat);g.help();g.shoot();g.updateWisky(.05f);g.updateShots(.08f);g.pulse=.3f;}
+    else if(step==3)scene(1,RoomKind::Combat);
+    else if(step==4)scene(2,RoomKind::Boss);
+    else if(step==5)scene(3,RoomKind::Boss);
+    else if(step==6)scene(0,RoomKind::Treasure);
+    else if(step==7){scene(1,RoomKind::Shop);g.coins=12;g.offerReward(true);}
+    else if(step==8){scene(1,RoomKind::Combat);for(auto&r:g.rooms)r.visited=true;g.mapOpen=true;}
+    else if(step==9){scene(2,RoomKind::Start);for(int n=0;n<ItemCount;++n)g.grantItem(ItemId(n),false);g.inventoryOpen=true;}
+    else if(step==10||step==11){
+        scene(3,RoomKind::Boss);for(auto&e:g.enemies)e.hp=0;g.removeDefeated();g.noticeTime=0;
+        if(step==11){g.player=RoomCenter;g.pickups();g.player=MalikethPosition;g.interact();g.player={790,470};g.noticeTime=0;}
+    }
+    else if(step==12||step==13){g.screen=Screen::Gallery;app.gallery=step==12?2:3;}
+    else if(step==14)g.screen=Screen::Settings;
+    else if(step==15)g.screen=Screen::Controls;
+    else if(step==16){scene(2,RoomKind::Combat);g.screen=Screen::Lost;g.hasSave=false;g.hp=0;}
+    else if(step==17){g.screen=Screen::Won;g.runTime=1240;g.giovannyRescued=true;g.malikethFriendly=true;g.wiskyRecovered=true;}
+    else if(step==18){scene(0,RoomKind::Treasure);g.offerReward();}
+    else if(step==19)scene(0,RoomKind::Boss);
+    if(step==4||step==5||step==19){g.enemies[0].windup=.6f;g.enemies[0].target=g.player;g.enemies[0].timer=0;}
 }
+
 }
 
 int main(int argc,char** argv) {
@@ -226,13 +234,13 @@ int main(int argc,char** argv) {
     RenderTexture2D surface=LoadRenderTexture(Width,Height); SetTextureFilter(surface.texture,TEXTURE_FILTER_POINT);
     App app; app.game.loadStage(0); app.game.screen=Screen::Title; app.saveFile=profilePath();
     if(!testing) { loadProfile(app.game,app.saveFile); app.applyFullscreen(); }
-    Audio audio; audio.init(!testing);
+    AudioSystem audio; audio.init(!testing);
     int frame=0,previousCapture=-1; float uiTime=0;
-    static const char* captureNames[]={"menu","pradera","magia","sendero","torre","personajes","ajustes","controles","derrota","victoria"};
+    static const char* captureNames[]={"menu","pachonidad","veneno","bigotes","wikerman","maliketh","tesoro","tienda","mapa","inventario","churu","amigos","giovanny","maliketh-retrato","ajustes","controles","derrota","victoria","premio","almohadon"};
     while(!WindowShouldClose()&&!app.quit) {
         float dt=testing?1.0f/60:std::min(GetFrameTime(),0.05f); uiTime+=dt;
         if(!capture.empty()) {
-            int step=std::min(9,frame/12);
+            int step=std::min(19,frame/12);
             if(step!=previousCapture) { captureState(app,step); previousCapture=step; }
         } else app.update(dt,testing);
         audio.update(app.game);
@@ -242,11 +250,11 @@ int main(int argc,char** argv) {
         Vector2 mouseDelta=GetMouseDelta();
         if(!testing&&length(mouseDelta)>0.5f) { app.mouseActive=true; app.mouseRecent=2; }
         else app.mouseRecent=std::max(0.0f,app.mouseRecent-dt);
-        bool mouseVisible=app.game.screen!=Screen::Playing;
+        bool mouseVisible=app.game.screen!=Screen::Playing||app.game.mapOpen||app.game.inventoryOpen;
         if(mouseVisible) ShowCursor(); else HideCursor();
         int hover=-1;
         BeginTextureMode(surface); ClearBackground({11,19,28,255});
-        if(app.game.screen==Screen::Playing||app.game.screen==Screen::Paused||app.game.screen==Screen::Lost) {
+        if(app.game.screen==Screen::Playing||app.game.screen==Screen::Paused||app.game.screen==Screen::Lost||app.game.screen==Screen::Reward) {
             float shake=app.game.preferences.reducedMotion?0:app.game.shake;
             Camera2D camera{}; camera.zoom=1; camera.offset={std::sin(uiTime*65)*shake*13,std::cos(uiTime*72)*shake*10};
             BeginMode2D(camera); drawWorld(app.game); drawEffects(app.game,art); EndMode2D();
@@ -256,13 +264,22 @@ int main(int argc,char** argv) {
         }
         if(app.game.screen!=Screen::Playing) hover=drawMenu(app.game,art,app.game.screen,app.selected,mouse,
             app.mouseActive&&inside(mouse,{0,0,float(Width),float(Height)}),uiTime,app.gallery);
+        if(app.game.mapOpen) hover=drawMap(app.game,art,mouse,app.mouseActive);
+        else if(app.game.inventoryOpen) hover=drawInventory(app.game,art,mouse,app.mouseActive);
+        if(app.game.screen==Screen::Playing&&!app.game.mapOpen&&!app.game.inventoryOpen&&app.mouseRecent>0&&inside(mouse,Field)) {
+            DrawCircleLines(int(mouse.x),int(mouse.y),8,{251,212,232,220});
+            DrawLine(int(mouse.x)-12,int(mouse.y),int(mouse.x)-5,int(mouse.y),{251,212,232,220});
+            DrawLine(int(mouse.x)+5,int(mouse.y),int(mouse.x)+12,int(mouse.y),{251,212,232,220});
+            DrawLine(int(mouse.x),int(mouse.y)-12,int(mouse.x),int(mouse.y)-5,{251,212,232,220});
+            DrawLine(int(mouse.x),int(mouse.y)+5,int(mouse.x),int(mouse.y)+12,{251,212,232,220});
+        }
         SetMouseCursor(hover>=0?MOUSE_CURSOR_POINTING_HAND:MOUSE_CURSOR_DEFAULT);
         EndTextureMode();
         BeginDrawing(); ClearBackground({5,9,14,255});
         DrawTexturePro(surface.texture,{0,0,float(Width),-float(Height)},
             {offset.x,offset.y,Width*scale,Height*scale},{0,0},0,WHITE);
         EndDrawing();
-        if(!testing&&app.game.screen!=Screen::Playing&&IsMouseButtonPressed(MOUSE_BUTTON_LEFT)&&hover>=0) {
+        if(!testing&&(app.game.screen!=Screen::Playing||app.game.mapOpen||app.game.inventoryOpen)&&IsMouseButtonPressed(MOUSE_BUTTON_LEFT)&&hover>=0) {
             if(hover<100) app.selected=hover;
             app.activate(hover);
         }
@@ -272,7 +289,7 @@ int main(int argc,char** argv) {
             UnloadImage(screenshot);
         }
         ++frame;
-        if((smoke&&frame>=120)||(!capture.empty()&&frame>=120)) break;
+        if((smoke&&frame>=120)||(!capture.empty()&&frame>=240)) break;
     }
     if(!testing) saveProfile(app.game,app.saveFile);
     audio.close(); UnloadRenderTexture(surface); UnloadFont(art.font); UnloadFont(art.smallFont);

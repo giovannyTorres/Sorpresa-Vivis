@@ -18,6 +18,13 @@ artwork and fonts so that no game engine or asset-folder installation is require
 - License: SIL Open Font License 1.1. The complete project-provided `OFL.txt` is
   included in each desktop package as `licenses/LICENSE-Pixelify-Sans.txt`.
 
+## Music and sound effects
+
+Version 0.4.0 composes its music and synthesizes its sound effects in
+`native_game/src/audio.cpp`. Playback uses raylib's existing audio module;
+no external music recordings, sound packs or additional audio libraries are
+downloaded or required by the game.
+
 ## Compiler and runtime
 
 Linux builds use the host GNU C++ compiler. Windows cross-builds can use a system
